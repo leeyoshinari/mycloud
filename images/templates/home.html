@@ -1,0 +1,137 @@
+{% extends 'template.html' %}
+{% load static %}
+{% block addcss %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block addjs %}
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% block addbody %}
+    <div class="container1">
+        <a target="_blank" href="home.html">首页</a>
+    </div>
+    <div class="container2">
+        <div class="list-icon">
+            <img src="{% static 'img/imageres_1023.ico' %}">
+            <button>最新文件</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/imageres_1003.ico' %}">
+            <button>图片</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/imageres_1005.ico' %}">
+            <button>视频</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/imageres_1004.ico' %}">
+            <button>音乐</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/docx.png' %}">
+            <button>Word文档</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/excel.png' %}">
+            <button>Excel表格</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/ppt.png' %}">
+            <button>PPT幻灯片</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/pdf.png' %}">
+            <button>PDF文档</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/imageres_1002.ico' %}">
+            <button>TXT文本</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/imageres_3.ico' %}">
+            <button>其他</button>
+        </div>
+    </div>
+    <!--div class="horizontal-line"></div-->
+    <div class="container3">
+        <div class="toolbar">
+            <div>
+                <label>当前路径：
+                    <input type="text" style="width: 39%;" id="current_path" readonly>
+                </label>
+                <label style="float: right; margin-right: 3%; width: 25%;">
+                    <input type="text" style="width: 70%;" id="search" placeholder="搜索所有文件">
+                    <button style="width: 20%;">搜索</button>
+                </label>
+            </div>
+            <div class="vertical-bar"></div>
+            <div>
+                <label>布局：
+                    <select id="layout" onchange="change_layout()">
+                        <option value="0" selected>详细信息</option>
+                        <option value="1">大图标</option>
+                        <option value="2">中图标</option>
+                        <option value="3">小图标</option>
+                    </select>
+                </label>
+                <label>排序类型：
+                    <select id="sort_type">
+                        <option value="0" selected>名称</option>
+                        <option value="1">大小</option>
+                        <option value="2">格式</option>
+                        <option value="3">创建时间</option>
+                        <option value="4">修改时间</option>
+                    </select>
+                </label>
+                <label>排序方式：
+                    <select id="sorted">
+                        <option value="desc" selected>递增</option>
+                        <option value="asc">递减</option>
+                    </select>
+                </label>
+                <label>操作：
+                    <button>上传文件</button>
+                    <button>新建文件夹</button>
+                    <button>移动</button>
+                    <button>删除</button>
+                </label>
+            </div>
+            <div class="vertical-bar"></div>
+        </div>
+        <div class="detail">
+            <table id="layout-table">
+                <thead>
+                    <tr class="table_style">
+                        <th width="1%" style="text-align: center;"><input type="checkbox"></th>
+                        <th width="8%">名称</th>
+                        <th width="8%">大小</th>
+                        <th width="10%">格式</th>
+                        <th width="10%">创建时间</th>
+                        <th width="10%">修改时间</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                    <tr>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                        <td>1234.png</td>
+                        <td>1234567 KB</td>
+                        <td>png</td>
+                        <td>2022-02-07 05:20:20</td>
+                        <td>2022-02-07 05:20:20</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div id="layout-img">
+            </div>
+        </div>
+    </div>
+{% block fenye %}
+{% endblock %}
+{% endblock %}
+{% block backjs %}
+    <script src="{% static 'js/fenye.js' %}"></script>
+    <script src="{% static 'js/home.js' %}"></script>
+{% endblock %}
