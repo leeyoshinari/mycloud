@@ -96,9 +96,7 @@ th {
     margin: auto;
     background-color: #e2e2e2;
 }
-#tbody:hover {
-	background-color: #fac79b;
-}
+
 td {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -108,15 +106,43 @@ tr {
     height: 33px;
     text-align: left;
 }
-#layout-img div {
+
+tr:hover td {
+	background-color: #fcbb7a;
+}
+
+.div-img {
 	float: left;
+	width: 100px;
+	margin: 1%;
 }
 #layout-img img {
-	width: 100px;
+	width: 100%;
 }
-#layout-img p {
+#layout-img textarea {
 	text-align: center;
+	width: 100%;
+	overflow: hidden;
+	border: none;
+	resize: none;
 }
+
+.file-name {
+	cursor: pointer;
+	border: none;
+	font-size: inherit;
+	background-color: transparent;
+}
+.actions {
+	color: blue;
+	cursor: pointer;
+	border: none;
+	font-size: inherit;
+	margin-right: 10px;
+	margin-left: 10px;
+	background-color: transparent;
+}
+
 #foot {
 	width: 100%;
 	height: 30px;
