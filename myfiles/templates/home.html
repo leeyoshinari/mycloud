@@ -11,12 +11,16 @@
 
 {% block addbody %}
     <div class="container1">
-        <a target="_blank" href="home.html">首页</a>
+        <a target="_blank" onclick="get_files_by_folder()">首页</a>
     </div>
     <div class="container2">
         <div class="list-icon">
             <img src="{% static 'img/imageres_1023.ico' %}">
-            <button>最新文件</button>
+            <button onclick="get_root_folder()">根目录</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/imageres_1023.ico' %}">
+            <button onclick="recent_file()">最新文件</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/imageres_1003.ico' %}">
@@ -58,19 +62,22 @@
     <!--div class="horizontal-line"></div-->
     <div class="container3">
         <div class="toolbar">
+            <div class="left-arrow" title="返回上一级目录">
+                <a href="javascript:return_folder()"><img src="{% static 'img/arrow.png' %}"></a>
+            </div>
             <div>
                 <label>当前路径：
-                    <input type="text" style="width: 39%;" id="current_path" readonly>
+                    <input type="text" style="width: 39%;" id="current_path" value="" name="520" readonly>
                 </label>
                 <label style="float: right; margin-right: 3%; width: 25%;">
                     <input type="text" style="width: 70%;" id="search" placeholder="搜索所有文件">
-                    <button style="width: 20%;">搜索</button>
+                    <button style="width: 20%;" onclick="search_file()">搜索</button>
                 </label>
             </div>
             <div class="vertical-bar"></div>
             <div>
                 <label>布局：
-                    <select id="layout" onchange="change_layout()">
+                    <select id="layout" onchange="refresh_folder()">
                         <option value="0" selected>详细信息</option>
                         <option value="1">大图标</option>
                         <option value="2">中图标</option>
@@ -78,24 +85,24 @@
                     </select>
                 </label>
                 <label>排序类型：
-                    <select id="sort_type">
-                        <option value="0" selected>名称</option>
-                        <option value="1">大小</option>
-                        <option value="2">格式</option>
-                        <option value="3">创建时间</option>
-                        <option value="4">修改时间</option>
+                    <select id="sort_type" onchange="refresh_folder()">
+                        <option value="name">名称</option>
+                        <option value="size">大小</option>
+                        <option value="format">格式</option>
+                        <option value="create_time">创建时间</option>
+                        <option value="update_time" selected>修改时间</option>
                     </select>
                 </label>
                 <label>排序方式：
-                    <select id="sorted">
-                        <option value="desc" selected>递增</option>
-                        <option value="asc">递减</option>
+                    <select id="sorted" onchange="refresh_folder()">
+                        <option value="desc" selected>递减</option>
+                        <option value="asc">递增</option>
                     </select>
                 </label>
                 <label>操作：
                     <button>上传</button>
                     <button>下载</button>
-                    <button>新建文件夹</button>
+                    <button onclick="create_folder()">新建文件夹</button>
                     <button>移动</button>
                     <button>删除</button>
                 </label>
@@ -118,12 +125,13 @@
                 <tbody id="tbody">
                     <tr>
                         <td style="text-align: center;"><input type="checkbox"></td>
-                        <td>1234.png</td>
+                        <td onclick="get_files()"><img src="{% static 'img/imageres_3.ico' %}"><p>1234.png</p></td>
                         <td>1234567 KB</td>
                         <td>png</td>
                         <td>2022-02-07 05:20:20</td>
                         <td>2022-02-07 05:20:20</td>
                         <td>
+                            <button class="actions">重命名</button>
                             <button class="actions">下载</button>
                             <button class="actions">移动</button>
                             <button class="actions">删除</button>
@@ -133,10 +141,11 @@
                         <td style="text-align: center;"><input type="checkbox"></td>
                         <td><button class="file-name">music</button></td>
                         <td></td>
-                        <td></td>
+                        <td>文件夹</td>
                         <td>2022-02-07 05:20:20</td>
                         <td>2022-02-07 05:20:20</td>
                         <td>
+                            <button class="actions">重命名</button>
                             <button class="actions">移动</button>
                             <button class="actions">删除</button>
                         </td>
@@ -147,7 +156,31 @@
             </div>
         </div>
     </div>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+              <div class="modal-header">
+                  <span class="close">&times;</span>
+                  <h2 id="title-name">新建文件夹</h2>
+              </div>
+              <div class="modal-body">
+                  <div>
+                      <label>名  称：</label>
+                      <input id="folder_name" type="text" placeholder="请输入名称">
+                  </div>
+              </div>
+              <div class="modal-footer">
+                  <a class="cancel">取消</a>
+                  <a class="submit">确定</a>
+          </div>
+        </div>
+    </div>
 {% block fenye %}
+    <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+    <script type="text/javascript">
+    $(function () {
+        PagingManage($("#paging"), 5, 2, '{% url 'myfiles:home' %}?&pageNum=')
+    });
+    </script>
 {% endblock %}
 {% endblock %}
 {% block backjs %}

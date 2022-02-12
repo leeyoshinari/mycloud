@@ -28,7 +28,7 @@
             "min-width":$options.width,
             "display":"none",
             "border-radius":$options.border_radius,
-            // "z-index":99999
+            "z-index":99999
         };
 
         $element = $('<div class="toast-item-wrapper ' + type + ' ' + $options.position_class + '"></div>');

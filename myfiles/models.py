@@ -33,6 +33,9 @@ class Files(models.Model):
 
     class Meta:
         db_table = 'files'
+        indexes = [models.Index(fields=['name']), models.Index(fields=['format']),
+                   models.Index(fields=['size']), models.Index(fields=['create_time']),
+                   models.Index(fields=['update_time'])]
 
 
 class History(models.Model):

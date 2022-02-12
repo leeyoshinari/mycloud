@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'images',
+    'myfiles',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,7 +44,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -109,8 +109,8 @@ LANGUAGE_CODE = 'zh-Hans'  #'en-us'
 TIME_ZONE = 'Asia/Shanghai'  #'UTC'
 
 USE_I18N = True
-
-USE_TZ = True
+USE_L10N = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -154,7 +154,7 @@ LOGGING = {
         # 默认的
         'default': {
             'class': 'logging.handlers.RotatingFileHandler',  # 保存到文件，自动切
-            'filename': os.path.join(BASE_LOG_DIR, "run.log"),  # 日志文件
+            'filename': os.path.join(BASE_LOG_DIR, "mycloud.log"),  # 日志文件
             'maxBytes': 1024 * 1024 * 10,  # 日志大小 10M
             'backupCount': 2,  # 最多备份几个
             'formatter': 'standard',
@@ -170,3 +170,6 @@ LOGGING = {
         }
     },
 }
+
+# 查询分页大小
+PAGE_SIZE = 20
