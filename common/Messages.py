@@ -7,6 +7,8 @@ class Msg(object):
     MsgGetFileFailure = '查询失败'
     MsgOperateSuccess = '操作成功'
     MsgOperateFailure = '操作失败'
+    MsgMoveSuccess = '移动成功'
+    MsgMoveFailure = '移动失败'
     MsgUploadSuccess = '{}上传成功'
     MsgUploadFailure = '{}上传失败'
     MsgDownloadSuccess = '{}下载成功'

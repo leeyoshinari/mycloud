@@ -24,37 +24,37 @@
         </div>
         <div class="list-icon">
             <img src="{% static 'img/imageres_1003.ico' %}">
-            <button>图片</button>
+            <button onclick="files_format('jpg')">图片</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/imageres_1005.ico' %}">
-            <button>视频</button>
+            <button onclick="files_format('mp4')">视频</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/imageres_1004.ico' %}">
-            <button>音乐</button>
+            <button onclick="files_format('mp3')">音乐</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/docx.png' %}">
-            <button>Word文档</button>
+            <button onclick="files_format('docx')">Word文档</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/excel.png' %}">
-            <button>Excel表格</button>
+            <button onclick="files_format('xlsx')">Excel表格</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/ppt.png' %}">
-            <button>PPT幻灯片</button>
+            <button onclick="files_format('pptx')">PPT幻灯片</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/pdf.png' %}">
-            <button>PDF文档</button>
+            <button onclick="files_format('pdf')">PDF文档</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/imageres_1002.ico' %}">
-            <button>TXT文本</button>
+            <button onclick="files_format('txt')">TXT文本</button>
         </div>
-        <div class="list-icon">
+        <div class="list-icon" style="display: none;">
             <img src="{% static 'img/imageres_3.ico' %}">
             <button>其他</button>
         </div>
@@ -70,7 +70,7 @@
                     <input type="text" style="width: 39%;" id="current_path" value="" name="520" readonly>
                 </label>
                 <label style="float: right; margin-right: 3%; width: 25%;">
-                    <input type="text" style="width: 70%;" id="search" placeholder="搜索所有文件">
+                    <input type="text" style="width: 70%;" id="search" name="" placeholder="搜索所有文件">
                     <button style="width: 20%;" onclick="search_file()">搜索</button>
                 </label>
             </div>
@@ -122,65 +122,15 @@
                         <th width="20">操作</th>
                     </tr>
                 </thead>
-                <tbody id="tbody">
-                    <tr>
-                        <td style="text-align: center;"><input type="checkbox"></td>
-                        <td onclick="get_files()"><img src="{% static 'img/imageres_3.ico' %}"><p>1234.png</p></td>
-                        <td>1234567 KB</td>
-                        <td>png</td>
-                        <td>2022-02-07 05:20:20</td>
-                        <td>2022-02-07 05:20:20</td>
-                        <td>
-                            <button class="actions">重命名</button>
-                            <button class="actions">下载</button>
-                            <button class="actions">移动</button>
-                            <button class="actions">删除</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="text-align: center;"><input type="checkbox"></td>
-                        <td><button class="file-name">music</button></td>
-                        <td></td>
-                        <td>文件夹</td>
-                        <td>2022-02-07 05:20:20</td>
-                        <td>2022-02-07 05:20:20</td>
-                        <td>
-                            <button class="actions">重命名</button>
-                            <button class="actions">移动</button>
-                            <button class="actions">删除</button>
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="tbody"></tbody>
             </table>
-            <div id="layout-img">
-            </div>
+            <div id="layout-img"></div>
         </div>
     </div>
-    <div id="myModal" class="modal">
-        <div class="modal-content">
-              <div class="modal-header">
-                  <span class="close">&times;</span>
-                  <h2 id="title-name">新建文件夹</h2>
-              </div>
-              <div class="modal-body">
-                  <div>
-                      <label>名  称：</label>
-                      <input id="folder_name" type="text" placeholder="请输入名称">
-                  </div>
-              </div>
-              <div class="modal-footer">
-                  <a class="cancel">取消</a>
-                  <a class="submit">确定</a>
-          </div>
-        </div>
-    </div>
+    <div id="myModal"></div>
+    <div id="moving"></div>
 {% block fenye %}
     <div class="fenye"><ul id="paging" class="pagination"></ul></div>
-    <script type="text/javascript">
-    $(function () {
-        PagingManage($("#paging"), 5, 2, '{% url 'myfiles:home' %}?&pageNum=')
-    });
-    </script>
 {% endblock %}
 {% endblock %}
 {% block backjs %}

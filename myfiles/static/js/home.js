@@ -2,18 +2,16 @@
 let all_icons = {
     "folder": "imageres_3.ico",
     "docx": "docx.png",
-    "doc": "docx.png",
     "xlsx": "excel.png",
     "pptx": "ppt.png",
     "mp3": "imageres_1004.ico",
     "mp4": "imageres_1005.ico",
-    "avi": "imageres_1005.ico",
     "jpg": "imageres_1003.ico",
-    "png": "imageres_1003.ico",
-    "bmp": "imageres_1003.ico",
     "txt": "imageres_1002.ico",
     "pdf": "pdf.png"
 };
+let folder_window = '<div class="modal-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">新建文件夹</h2></div><div class="modal-body"><div><label>名称：</label><input id="folder_name" type="text" placeholder="请输入名称"></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>';
+let move_folder = '<div class="move-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">移动文件</h2></div><div class="modal-body"><div><label>移动到目录：</label><input id="folder_name" type="text" placeholder="请选择目标目录" value="/" name="520" readonly></div><div><label>选择目录：</label><div id="folder-tree"><ul class="domtree"><li onclick="get_folders(\'520\')">/</li><ul id="520"></ul></ul></div></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>'
 refresh_folder();
 function change_layout(results) {
     let layout = document.getElementById("layout").value;
@@ -56,6 +54,7 @@ function textarea_mouseout(file_id, file_type) {
 }
 
 function create_folder() {
+    document.getElementById("myModal").innerHTML = folder_window;
     let folder_id = document.getElementById("current_path").getAttribute("name");
     if (!folder_id) {
         folder_id = 520;
@@ -63,9 +62,11 @@ function create_folder() {
     connect_modal(folder_id, '新建文件夹', 'folder/create');
 }
 function rename_folder(folder_id) {
+    document.getElementById("myModal").innerHTML = folder_window;
     connect_modal(folder_id, '重命名文件夹', 'folder/rename');
 }
 function rename_file(file_id) {
+    document.getElementById("myModal").innerHTML = folder_window;
     connect_modal(file_id, '重命名文件', 'file/rename');
 }
 function connect_modal(folder_id, name, url) {
@@ -78,9 +79,11 @@ function connect_modal(folder_id, name, url) {
     modal.style.display = "block";
 
     close_a.onclick = function() {
+        modal.innerHTML = '';
         modal.style.display = "none";
     }
     cancel_a.onclick = function() {
+        modal.innerHTML = '';
         modal.style.display = "none";
     }
 
@@ -93,11 +96,67 @@ function connect_modal(folder_id, name, url) {
         }
 
         rename(folder_name, folder_id, url);
+        modal.innerHTML = '';
         modal.style.display = "none";
     }
 
     window.onclick = function(event) {
         if (event.target === modal) {
+            modal.innerHTML = '';
+            modal.style.display = "none";
+        }
+    }
+}
+function move_to_folder(file_id, file_type) {
+    let modal = document.getElementById('moving');
+    modal.innerHTML = move_folder;
+    let close_a = document.getElementsByClassName("close")[0];
+    let cancel_a = document.getElementsByClassName("cancel")[0];
+    let submit_a = document.getElementsByClassName("submit")[0];
+
+    get_folders('520');
+
+    modal.style.display = "block";
+
+    close_a.onclick = function() {
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+    cancel_a.onclick = function() {
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+
+    submit_a.onclick = function() {
+        let to_id = document.getElementById("folder_name").name;
+        let post_data = {
+            from_id: file_id,
+            to_id: to_id,
+            move_type: file_type
+        }
+        $.ajax({
+            type: "POST",
+            url: "folder/move",
+            data: post_data,
+            dataType: "json",
+            success: function (data) {
+                if (data['code'] === 0) {
+                    $.Toast(data['msg'], 'success');
+                    refresh_folder();
+                } else {
+                    $.Toast(data['msg'], 'error');
+                    return;
+                }
+            }
+        })
+
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            modal.innerHTML = '';
             modal.style.display = "none";
         }
     }
@@ -116,7 +175,6 @@ function rename(folder_name, folder_id, url) {
         success: function (data) {
             if (data['code'] === 0) {
                 $.Toast(data['msg'], 'success');
-                document.getElementById("folder_name").value = "";
                 refresh_folder();
             } else {
                 $.Toast(data['msg'], 'error');
@@ -126,11 +184,15 @@ function rename(folder_name, folder_id, url) {
     })
 }
 function get_root_folder() {
+    // 重置文件夹id
     document.getElementById("current_path").setAttribute("name", "520");
+    // 重置文件路径
     document.getElementById("current_path").setAttribute("value", "");
+    // 重置查询文件格式
+    document.getElementById("search").setAttribute("name", "");
     let sorted_type = document.getElementById("sort_type").value;
     let sorted = document.getElementById("sorted").value;
-    get_files("520", sorted, sorted_type);
+    get_files("520", sorted, sorted_type, 1, '', 'file/get');
 }
 function click_folder(folder_id, name) {
     let current_path = document.getElementById("current_path").getAttribute("value");
@@ -143,30 +205,45 @@ function click_folder(folder_id, name) {
     } else {
         document.getElementById("current_path").setAttribute("value", current_path + '/' + name);
     }
-    get_files(folder_id, sorted, sorted_type);
+    get_files(folder_id, sorted, sorted_type, 1, '', 'file/get');
 }
-function refresh_folder() {
+function refresh_folder(page_num) {
     let folder_id = document.getElementById("current_path").getAttribute("name");
+    let file_format = document.getElementById("search").getAttribute("name");
     let sorted_type = document.getElementById("sort_type").value;
     let sorted = document.getElementById("sorted").value;
-    get_files(folder_id, sorted, sorted_type);
+    if (file_format) {
+        get_files(folder_id, sorted, sorted_type, page_num, file_format, 'file/getByFormat');
+    }
+    else {
+        get_files(folder_id, sorted, sorted_type, page_num, file_format, 'file/get');
+    }
 }
-function get_files(folder_id, sorted, sorted_type) {
+function get_files(folder_id, sorted, sorted_type, page_num, file_format, url) {
+    let page_size = 20;
+    let layout = document.getElementById("layout").value;
+    if (layout === '1') {page_size = 12;}
+    if (layout === '2') {page_size = 21;}
+    if (layout === '3') {page_size = 50;}
     let post_data = {
         id: folder_id,
+        page: page_num,
+        format: file_format,
+        page_size: page_size,
         sorted: sorted,
         sorted_type: sorted_type
     };
 
     $.ajax({
         type: "POST",
-        url: "getFiles",
+        url: url,
         data: post_data,
         dataType: "json",
         success: function (data) {
             if (data['code'] === 0) {
                 // $.Toast(data['msg'], 'success');
-                change_layout(data['data']);
+                change_layout(data['data']['data']);
+                PagingManage($('#paging'), data['data']['total_page'], data['data']['page'], 'refresh_folder(')
             } else {
                 $.Toast(data['msg'], 'error');
                 return;
@@ -176,13 +253,25 @@ function get_files(folder_id, sorted, sorted_type) {
 }
 
 function recent_file() {
+    // 重置文件夹id
+    document.getElementById("current_path").setAttribute("name", "520");
+    // 重置文件路径
+    document.getElementById("current_path").setAttribute("value", "");
+    // 重置查询文件格式
+    document.getElementById("search").setAttribute("name", "");
+
+    let page_size = 20;
+    let layout = document.getElementById("layout").value;
+    if (layout === '1') {page_size = 12;}
+    if (layout === '3') {page_size = 50;}
     $.ajax({
         type: "GET",
-        url: "getRecentFiles",
+        url: "file/get/recent?page=" + page_size,
         success: function (data) {
             if (data['code'] === 0) {
                 $.Toast(data['msg'], 'success');
-                display_files(data['data']);
+                change_layout(data['data']);
+                $('#paging').html('');
             } else {
                 $.Toast(data['msg'], 'error');
                 return;
@@ -199,7 +288,7 @@ function display_files(results) {
             s = s + '<td onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="static/img/' + all_icons['folder'] + '">' + results[i]['fields']['name'] + '</td><td></td><td>文件夹</td>';
             s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
             s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-            s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
+            s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'folder\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
         }
         if (results[i]['model'] === "myfiles.files") {
             s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
@@ -208,7 +297,7 @@ function display_files(results) {
             s = s + '<td>' + results[i]['fields']['format'] + '</td>';
             s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
             s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-            s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
+            s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
         }
     }
     document.getElementById("tbody").innerHTML = s;
@@ -217,15 +306,23 @@ function flat_img(results) {
     let s = "";
     let type_icon = 'folder';
     for (let i=0; i<results.length; i++) {
-        if (results[i]['model'] === "myfiles.catalog") {type_icon = 'folder';}
-        if (results[i]['model'] === "myfiles.files") {type_icon = results[i]['fields']['format'];}
-        s = s + '<div class="div-img"><div><img src="/static/img/' + all_icons[type_icon] + '"></div><div class="checkoutbox"><input type="checkbox"></div>';
-        s = s + '<textarea id="' + results[i]['pk'] + '" name="' + type_icon + '" onfocusout="textarea_mouseout(this.id, this.name)" title="' + results[i]['fields']['name'] + '">'+ results[i]['fields']['name'] +'</textarea></div>';
+        if (results[i]['model'] === "myfiles.catalog") {
+            s = s + '<div class="div-img"><div onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="/static/img/' + all_icons['folder'] + '"></div><div class="checkoutbox"><input type="checkbox"></div>';
+            s = s + '<textarea id="' + results[i]['pk'] + '" name="' + type_icon + '" onfocusout="textarea_mouseout(this.id, this.name)" title="' + results[i]['fields']['name'] + '">'+ results[i]['fields']['name'] +'</textarea></div>';
+        }
+        if (results[i]['model'] === "myfiles.files") {
+            s = s + '<div class="div-img"><div><img src="/static/img/' + all_icons[results[i]['fields']['format']] + '"></div><div class="checkoutbox"><input type="checkbox"></div>';
+            s = s + '<textarea id="' + results[i]['pk'] + '" name="' + type_icon + '" onfocusout="textarea_mouseout(this.id, this.name)" title="' + results[i]['fields']['name'] + '">' + results[i]['fields']['name'] + '</textarea></div>';
+        }
     }
     document.getElementById("layout-img").innerHTML = s;
 }
 
 function delete_folder(folder_id) {
+    let answer = confirm('确定删除文件夹吗？');
+    if (!answer) {
+        return;
+    }
     $.ajax({
         type: "GET",
         url: "folder/delete?id=" + folder_id,
@@ -241,6 +338,10 @@ function delete_folder(folder_id) {
     })
 }
 function delete_file(file_id) {
+    let answer = confirm('确定删除文件吗？');
+    if (!answer) {
+        return;
+    }
     $.ajax({
         type: "GET",
         url: "file/delete?id=" + file_id,
@@ -255,23 +356,39 @@ function delete_file(file_id) {
         }
     })
 }
-function search_file() {
+function search_file(page_num) {
+    // 重置文件夹id
+    document.getElementById("current_path").setAttribute("name", "520");
+    // 重置文件路径
+    document.getElementById("current_path").setAttribute("value", "");
+    let page_size = 20;
+    let layout = document.getElementById("layout").value;
+    if (layout === '1') {page_size = 12;}
+    if (layout === '2') {page_size = 21;}
+    if (layout === '3') {page_size = 50;}
     let word = document.getElementById("search").value;
+    let post_data = {
+        key_word: word,
+        page: page_num,
+        page_size: page_size
+    }
     $.ajax({
-        type: "GET",
-        url: "file/search?key_word=" + word,
+        type: "POST",
+        url: "file/search",
+        data: post_data,
+        dataType: "json",
         success: function (data) {
             if (data['code'] === 0) {
                 $.Toast(data['msg'], 'success');
                 let s = "";
-                let results = data['data'];
+                let results = data['data']['data'];
                 for (let i=0; i<results.length; i++) {
                     if (results[i]['model'] === "myfiles.catalog") {
                         s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
                         s = s + '<td onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="static/img/' + all_icons['folder'] + '">' + results[i]['fields']['name'] + '</td><td></td><td>文件夹</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-                        s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['pk'] + '\')">文件位置</button></td></tr>';
+                        s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['pk'] + '\')">文件位置</button></td></tr>';
                     }
                     if (results[i]['model'] === "myfiles.files") {
                         s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
@@ -280,10 +397,11 @@ function search_file() {
                         s = s + '<td>' + results[i]['fields']['format'] + '</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-                        s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\')">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['fields']['parent'] + '\')">文件位置</button></td></tr>';
+                        s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\')">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['fields']['parent'] + '\')">文件位置</button></td></tr>';
                     }
                 }
                 document.getElementById("tbody").innerHTML = s;
+                PagingManage($('#paging'), data['data']['total_page'], data['data']['page'], 'search_file(')
             } else {
                 $.Toast(data['msg'], 'error');
                 return;
@@ -292,14 +410,21 @@ function search_file() {
     })
 }
 
-function find_origin_path(file_id) {
+function find_origin_path(folder_id, is_return) {
     $.ajax({
         type: "GET",
-        url: "findOriginPath?id=" + file_id,
+        url: "folder/getPath?id=" + folder_id,
         success: function (data) {
             if (data['code'] === 0) {
-                $.Toast(data['msg'], 'success');
-                alert('文件所在目录：' + data['data']);
+                if (is_return) {
+                    let full_path = data['data'];
+                    if (full_path === '当前文件在根目录') {full_path = '/';}
+                    document.getElementById("folder_name").setAttribute("value", full_path);
+                    document.getElementById("folder_name").setAttribute("name", folder_id);
+                } else {
+                    $.Toast(data['msg'], 'success');
+                    alert('文件路径：' + data['data']);
+                }
             } else {
                 $.Toast(data['msg'], 'error');
                 return;
@@ -323,6 +448,35 @@ function return_folder() {
                 document.getElementById("current_path").setAttribute("name", data['data']['id']);
                 document.getElementById("current_path").setAttribute("value", data['data']['name']);
                 refresh_folder();
+            } else {
+                $.Toast(data['msg'], 'error');
+                return;
+            }
+        }
+    })
+}
+
+function files_format(file_format) {
+    document.getElementById("search").setAttribute("name", file_format);
+    // 重置文件夹id
+    document.getElementById("current_path").setAttribute("name", "520");
+    // 重置文件路径
+    document.getElementById("current_path").setAttribute("value", "");
+    refresh_folder();
+}
+
+function get_folders(folder_id) {
+    find_origin_path(folder_id, 'folder');
+    $.ajax({
+        type: "GET",
+        url: "folder/get?id=" + folder_id,
+        success: function (data) {
+            if (data['code'] === 0) {
+                let s = '';
+                for (let i=0; i<data['data'].length; i++) {
+                    s = s + '<li onclick="get_folders(\'' + data['data'][i]['pk'] + '\')">' + data['data'][i]['fields']['name'] + '</li><ul id="' + data['data'][i]['pk'] + '"></ul>'
+                }
+                document.getElementById(folder_id).innerHTML = s;
             } else {
                 $.Toast(data['msg'], 'error');
                 return;
