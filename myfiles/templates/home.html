@@ -5,8 +5,8 @@
 {% endblock %}
 
 {% block addjs %}
-    <script src="/static/vendor/jquery/jquery.min.js"></script>
-    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+{#    <script src="{% static 'js/bootstrap.min.js' %}"></script>#}
 {% endblock %}
 
 {% block addbody %}
@@ -16,7 +16,7 @@
     <div class="container2">
         <div class="list-icon">
             <img src="{% static 'img/imageres_1023.ico' %}">
-            <button onclick="get_root_folder()">根目录</button>
+            <button onclick="get_root_folder()">我的云盘</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/imageres_1023.ico' %}">
@@ -100,12 +100,15 @@
                     </select>
                 </label>
                 <label>操作：
-                    <button>上传</button>
+                    <button onclick="upload_file()">上传</button>
                     <button>下载</button>
                     <button onclick="create_folder()">新建文件夹</button>
                     <button>移动</button>
                     <button>删除</button>
                 </label>
+                <form action="" id ="fileUpload-form">
+                    <input type="file" name="filename" id="fileUpload-input" multiple style="display: none">
+                </form>
             </div>
             <div class="vertical-bar"></div>
         </div>

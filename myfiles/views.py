@@ -164,6 +164,8 @@ def search_file(request):
         try:
             key_word = request.POST.get('key_word')
             key_word = key_word.strip().replace('%', '')
+            if not key_word:
+                return result(code=0, msg=Msg.MsgGetFileSuccess)
             page_num = request.POST.get('page')
             page_size = request.POST.get('page_size')
             page_num = int(page_num) if page_num else 1
@@ -207,7 +209,7 @@ def find_origin_path(request):
                 all_path.append(folder.name)
                 parent_id = folder.parent_id
             all_path.reverse()
-            return result(msg=Msg.MsgGetFileSuccess, data='/' + '/'.join(all_path))
+            return result(msg=Msg.MsgGetFileSuccess, data=' > '.join(all_path))
         except Exception as err:
             logging.error(f'Find origin path failure: {folder_id}')
             logging.error(traceback.format_exc())
@@ -223,9 +225,9 @@ def return_last_path(request):
             if parent_id == '520':
                 folder_name = ''
             else:
-                folder_list = folder_name.split('/')
+                folder_list = folder_name.split(' > ')
                 folder_list.pop(-1)
-                folder_name = '/'.join(folder_list)
+                folder_name = ' > '.join(folder_list)
             return result(msg=Msg.MsgOperateSuccess, data={'id': parent_id, 'name': folder_name})
         except Exception as err:
             logging.error(f'Return last path failure: {err}')

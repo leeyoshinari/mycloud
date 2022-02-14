@@ -203,7 +203,11 @@ function click_folder(folder_id, name) {
     if (!name) {
         document.getElementById("current_path").setAttribute("value", "");
     } else {
-        document.getElementById("current_path").setAttribute("value", current_path + '/' + name);
+        if (current_path) {
+            document.getElementById("current_path").setAttribute("value", current_path + ' > ' + name);
+        } else {
+            document.getElementById("current_path").setAttribute("value", name);
+        }
     }
     get_files(folder_id, sorted, sorted_type, 1, '', 'file/get');
 }
@@ -357,6 +361,11 @@ function delete_file(file_id) {
     })
 }
 function search_file(page_num) {
+    let word = document.getElementById("search").value.trim();
+    if (!word) {
+        $.Toast('请输入搜索关键字词', 'warning');
+        return;
+    }
     // 重置文件夹id
     document.getElementById("current_path").setAttribute("name", "520");
     // 重置文件路径
@@ -366,7 +375,6 @@ function search_file(page_num) {
     if (layout === '1') {page_size = 12;}
     if (layout === '2') {page_size = 21;}
     if (layout === '3') {page_size = 50;}
-    let word = document.getElementById("search").value;
     let post_data = {
         key_word: word,
         page: page_num,
@@ -483,4 +491,16 @@ function get_folders(folder_id) {
             }
         }
     })
+}
+
+function upload_file() {
+    let fileUpload_input = document.getElementById("fileUpload-input");
+    fileUpload_input.click();
+
+    fileUpload_input.onchange = function (event) {
+        document.getElementById("fileUpload-form").submit();
+        let files = event.target.files;
+        console.log(files);
+        console.log(files[0].size)
+    }
 }

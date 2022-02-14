@@ -182,7 +182,7 @@ tr:hover td {
 
 #foot {
 	width: 100%;
-	height: 30px;
+	height: 20px;
 	bottom: 0;
 	background-color: #B5B2B0;
 	position: fixed;
@@ -195,13 +195,13 @@ tr:hover td {
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	height: 50%;
+	height: 100%;
 	width: 100%;
 	text-align:center;
 }
 
 #foot .copyright p {
-	height: 50%;
+	height: 100%;
 	width: 100%;
 }
 
