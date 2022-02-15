@@ -16,6 +16,7 @@ urlpatterns = [
     path('folder/return', views.return_last_path, name='return_folder'),
     path('folder/move', views.move_to_folder, name='move_folder'),
     path('file/get', views.get_all_files, name='get_all_files'),
+    path('file/upload', views.upload_file, name='upload_file'),
     path('file/get/recent', views.get_recent_files, name='get_recent_files'),
     path('file/search', views.search_file, name='search_file'),
     path('file/rename', views.rename_file, name='rename_file'),

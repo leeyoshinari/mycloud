@@ -498,9 +498,36 @@ function upload_file() {
     fileUpload_input.click();
 
     fileUpload_input.onchange = function (event) {
-        document.getElementById("fileUpload-form").submit();
         let files = event.target.files;
-        console.log(files);
-        console.log(files[0].size)
+        let total_files = files.length;
+
+        for (let i=0; i<total_files; i++) {
+            let form_data = new FormData();
+            form_data.append("file", files[i]);
+            form_data.append("name", files[i].name);
+            form_data.append("type", files[i].type ? files[i].type : "");
+            form_data.append("size", files[i].size);
+            form_data.append('index', i);
+            form_data.append('total', total_files);
+
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", "file/upload");
+            xhr.setRequestHeader("processData", "false");
+
+            xhr.upload.addEventListener("progress", function (data) {
+                if (data.lengthComputable) {
+                    let precent = (data.loaded / data.total * 100).toFixed(2);
+                    console.log(precent);
+                }
+            }, false);
+
+            xhr.addEventListener("readystatechange", function () {
+                if (xhr.status === 200 && xhr.readyState === 4) {
+                    console.log('success');
+                }
+            })
+
+            xhr.send(form_data);
+        }
     }
 }

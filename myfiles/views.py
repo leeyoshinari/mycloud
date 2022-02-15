@@ -56,6 +56,12 @@ def rename_folder(request):
             return result(code=1, msg=Msg.MsgRenameFailure)
 
 
+def upload_file(request):
+    if request.method == 'POST':
+        form = request.FILES['file']
+        return None
+
+
 def rename_file(request):
     if request.method == 'POST':
         try:
