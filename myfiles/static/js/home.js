@@ -129,6 +129,10 @@ function move_to_folder(file_id, file_type) {
 
     submit_a.onclick = function() {
         let to_id = document.getElementById("folder_name").name;
+        if (file_id.indexOf(to_id) > -1) {
+            $.Toast("请不要文件夹移动到自己里面", 'error');
+            return;
+        }
         let post_data = {
             from_id: file_id,
             to_id: to_id,
@@ -297,7 +301,7 @@ function display_files(results) {
         if (results[i]['model'] === "myfiles.files") {
             s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
             s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
-            s = s + '<td>' + results[i]['fields']['size'] + ' KB</td>';
+            s = s + '<td>' + (results[i]['fields']['size'] / 1024).toFixed(2) + ' KB</td>';
             s = s + '<td>' + results[i]['fields']['format'] + '</td>';
             s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
             s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
@@ -401,7 +405,7 @@ function search_file(page_num) {
                     if (results[i]['model'] === "myfiles.files") {
                         s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
                         s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
-                        s = s + '<td>' + results[i]['fields']['size'] + ' KB</td>';
+                        s = s + '<td>' + (results[i]['fields']['size'] / 1024).toFixed(2) + ' KB</td>';
                         s = s + '<td>' + results[i]['fields']['format'] + '</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
@@ -495,6 +499,7 @@ function get_folders(folder_id) {
 
 function upload_file() {
     let fileUpload_input = document.getElementById("fileUpload-input");
+    let folder_id = document.getElementById("current_path").getAttribute("name");
     fileUpload_input.click();
 
     fileUpload_input.onchange = function (event) {
@@ -509,6 +514,7 @@ function upload_file() {
             form_data.append("size", files[i].size);
             form_data.append('index', i);
             form_data.append('total', total_files);
+            form_data.append('parent_id', folder_id);
 
             let xhr = new XMLHttpRequest();
             xhr.open("POST", "file/upload");

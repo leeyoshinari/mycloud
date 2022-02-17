@@ -13,6 +13,10 @@ from django.db.models.deletion import ProtectedError
 from .models import Catalog, Files, History
 from common.Results import result
 from common.Messages import Msg
+from common.MinioStorage import MinIOStorage
+
+
+storage = MinIOStorage()
 
 
 def login(request):
@@ -59,7 +63,28 @@ def rename_folder(request):
 def upload_file(request):
     if request.method == 'POST':
         form = request.FILES['file']
-        return None
+        file_name = form.name
+        file_size = form.size
+        parent_id = request.POST.get('parent_id')
+        content_type = form.content_type
+        data = form.file
+        bucket_name = str(int(time.time() % 100) + 500)
+        res = storage.upload_file_bytes(bucket_name, file_name, data, file_size)
+        if res:
+            try:
+                file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
+                current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+                file = Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=content_type,
+                                            parent_id=parent_id, bucket_name=bucket_name, object_name=res.object_name,
+                                            size=file_size, md5=res.etag, create_time=current_time, update_time=current_time)
+                return result(msg=Msg.MsgUploadSuccess, data=file_name)
+            except Exception as err:
+                logging.error(err)
+                logging.error(traceback.format_exc())
+                storage.delete_file(bucket_name, res.object_name)
+                return result(code=1, msg=Msg.MsgUploadFailure)
+        else:
+            return result(code=1, msg=Msg.MsgUploadFailure)
 
 
 def rename_file(request):

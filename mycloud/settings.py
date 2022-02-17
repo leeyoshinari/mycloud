@@ -171,5 +171,5 @@ LOGGING = {
     },
 }
 
-# 查询分页大小
-PAGE_SIZE = 20
+# Minio
+
