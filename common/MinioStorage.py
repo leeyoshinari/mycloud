@@ -10,15 +10,12 @@ from minio import Minio
 class MinIOStorage:
     def __init__(self, host=None, access_key=None, secret_key=None):
         self.client = None
-        if not host:
-            self.host = settings.MINIO_HOST
-        if not access_key:
-            self.access_key = settings.MINIO_ACCESS_KEY
-        if not secret_key:
-            self.secret_key = settings.MINIO_SECRET_KEY
+        self.host = host if host else settings.MINIO_HOST
+        self.access_key = access_key if access_key else settings.MINIO_ACCESS_KEY
+        self.secret_key = secret_key if secret_key else settings.MINIO_SECRET_KEY
 
         self.policy = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":' \
-                      '["s3:GetBucketLocation","s3:ListBucket","s3:ListBucketMultipartUploads"],"Resource":' \
+                      '["s3:GetBucketLocation","s3:ListBucketMultipartUploads"],"Resource":' \
                       '["arn:aws:s3:::%s"]},{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject",' \
                       '"s3:ListMultipartUploadParts","s3:PutObject","s3:AbortMultipartUpload","s3:DeleteObject"],' \
                       '"Resource":["arn:aws:s3:::%s/*"]}]}'
@@ -54,9 +51,9 @@ class MinIOStorage:
             logging.error(traceback)
             return None
 
-    def upload_file_bytes(self, bucket_name: str, object_name: str, data: bytes, length: int):
+    def upload_file_bytes(self, bucket_name: str, object_name: str, data: bytes, length: int, content_type=None):
         try:
-            res = self.client.put_object(bucket_name, object_name, data, length)
+            res = self.client.put_object(bucket_name, object_name, data, length, content_type)
             return res
         except Exception as err:
             logging.error(err)

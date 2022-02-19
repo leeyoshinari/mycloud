@@ -20,3 +20,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('myfiles.urls'), name='myfiles')
 ]
+
+urlpatterns = [
+    path('mycloud/', include(urlpatterns))
+]

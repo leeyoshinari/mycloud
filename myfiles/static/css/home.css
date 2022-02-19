@@ -64,7 +64,7 @@ body{
 	position: fixed;
 	top: 30px;
 	width: 90%;
-	z-index: 100;
+	/*z-index: 100;*/
 	background-color: white;
 }
 .toolbar .left-arrow {
@@ -101,6 +101,7 @@ body{
 	width: 90%;
 	top: 100px;
 	margin-top: 1%;
+	z-index: -1;
 }
 
 .vertical-bar {
@@ -417,4 +418,46 @@ tr:hover td {
 .move-content #folder_name {
 	height: 30px;
 	width: 77%;
+}
+
+.modal_cover {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, .6);
+}
+.modal_gif {
+    display: none;
+    position: absolute;
+    width: 100px;
+    z-index: 99;
+    height: 100px;
+    /* 水平垂直居中 */
+    left: 45%;
+    top: 45%;
+    transform: translate(-50%,-50%);
+    /* 超出高度右侧出现垂直滚动条 */
+    overflow:auto;
+    overflow-x:hidden;
+    background: url("loading.gif") no-repeat;
+    background-size: 80px 80px;
+}
+
+#progressBar {
+	position: absolute;
+	top: 50%;
+	left: 34%;
+	width: 20%;
+	height: 6%;
+}
+#percentage {
+	position: absolute;
+	top: 51%;
+	left: 43%;
+	font-weight: bolder;
+	font-size: large;
+	color: #d9534f;
 }

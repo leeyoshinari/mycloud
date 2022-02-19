@@ -6,7 +6,7 @@ let all_icons = {
     "pptx": "ppt.png",
     "mp3": "imageres_1004.ico",
     "mp4": "imageres_1005.ico",
-    "jpg": "imageres_1003.ico",
+    "jpeg": "imageres_1003.ico",
     "txt": "imageres_1002.ico",
     "pdf": "pdf.png"
 };
@@ -319,7 +319,11 @@ function flat_img(results) {
             s = s + '<textarea id="' + results[i]['pk'] + '" name="' + type_icon + '" onfocusout="textarea_mouseout(this.id, this.name)" title="' + results[i]['fields']['name'] + '">'+ results[i]['fields']['name'] +'</textarea></div>';
         }
         if (results[i]['model'] === "myfiles.files") {
-            s = s + '<div class="div-img"><div><img src="/static/img/' + all_icons[results[i]['fields']['format']] + '"></div><div class="checkoutbox"><input type="checkbox"></div>';
+            let src = '/static/img/' + all_icons[results[i]['fields']['format']];
+            if (results[i]['fields']['format'] === 'jpeg') {
+                src = 'getFile/' + results[i]['fields']['path'];
+            }
+            s = s + '<div class="div-img"><div><img src="' + src + '"></div><div class="checkoutbox"><input type="checkbox"></div>';
             s = s + '<textarea id="' + results[i]['pk'] + '" name="' + type_icon + '" onfocusout="textarea_mouseout(this.id, this.name)" title="' + results[i]['fields']['name'] + '">' + results[i]['fields']['name'] + '</textarea></div>';
         }
     }
@@ -503,8 +507,16 @@ function upload_file() {
     fileUpload_input.click();
 
     fileUpload_input.onchange = function (event) {
+        let progressBar = document.getElementById("progressBar");
+        let percentageDiv = document.getElementById("percentage");
+        $('.modal_cover').css("display", "block");
+        $('.modal_gif').css("display", "block");
         let files = event.target.files;
         let total_files = files.length;
+        let success_num = 0;
+        let failure_num = 0;
+        let failure_file = [];
+        progressBar.max = total_files;
 
         for (let i=0; i<total_files; i++) {
             let form_data = new FormData();
@@ -512,7 +524,7 @@ function upload_file() {
             form_data.append("name", files[i].name);
             form_data.append("type", files[i].type ? files[i].type : "");
             form_data.append("size", files[i].size);
-            form_data.append('index', i);
+            form_data.append('index', i + 1);
             form_data.append('total', total_files);
             form_data.append('parent_id', folder_id);
 
@@ -520,18 +532,36 @@ function upload_file() {
             xhr.open("POST", "file/upload");
             xhr.setRequestHeader("processData", "false");
 
-            xhr.upload.addEventListener("progress", function (data) {
-                if (data.lengthComputable) {
-                    let precent = (data.loaded / data.total * 100).toFixed(2);
-                    console.log(precent);
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    // progressBar.max = event.total;
+                    // progressBar.value = event.loaded;
+                    // percentageDiv.innerHTML = (event.loaded / event.total * 100).toFixed(2) + "%";
                 }
-            }, false);
+            };
+            xhr.onload = function(event) {
+            }
 
-            xhr.addEventListener("readystatechange", function () {
-                if (xhr.status === 200 && xhr.readyState === 4) {
-                    console.log('success');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if(xhr.status === 200) {
+                        success_num += 1;
+                        progressBar.value = success_num;
+                        percentageDiv.innerHTML = (success_num / total_files * 100).toFixed(2) + "%";
+                        console.log(xhr.responseText);
+                    } else {
+                        failure_num += 1;
+                        failure_file.push(files[i].name)
+                        console.log(failure_file);
+                    }
+
+                    if ((success_num + failure_num) === total_files) {
+                            refresh_folder();
+                            $('.modal_cover').css("display", "none");
+                            $('.modal_gif').css("display", "none");
+                        }
                 }
-            })
+            }
 
             xhr.send(form_data);
         }

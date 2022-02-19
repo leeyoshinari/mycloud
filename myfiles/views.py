@@ -69,22 +69,23 @@ def upload_file(request):
         content_type = form.content_type
         data = form.file
         bucket_name = str(int(time.time() % 100) + 500)
-        res = storage.upload_file_bytes(bucket_name, file_name, data, file_size)
+        object_name = str(random.randint(1, 99)) + str(int(time.time())) + '.' + file_name.split('.')[-1]
+        res = storage.upload_file_bytes(bucket_name, object_name, data, file_size, content_type=content_type)
         if res:
             try:
                 file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
                 current_time = time.strftime('%Y-%m-%d %H:%M:%S')
-                file = Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=content_type,
-                                            parent_id=parent_id, bucket_name=bucket_name, object_name=res.object_name,
+                file = Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=content_type.split('/')[-1],
+                                            parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
                                             size=file_size, md5=res.etag, create_time=current_time, update_time=current_time)
-                return result(msg=Msg.MsgUploadSuccess, data=file_name)
+                return result(msg=Msg.MsgUploadSuccess.format(file_name), data=file_name)
             except Exception as err:
                 logging.error(err)
                 logging.error(traceback.format_exc())
                 storage.delete_file(bucket_name, res.object_name)
-                return result(code=1, msg=Msg.MsgUploadFailure)
+                return result(code=1, msg=Msg.MsgUploadFailure.format(file_name))
         else:
-            return result(code=1, msg=Msg.MsgUploadFailure)
+            return result(code=1, msg=Msg.MsgUploadFailure.format(file_name))
 
 
 def rename_file(request):
