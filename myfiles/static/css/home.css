@@ -261,6 +261,10 @@ tr:hover td {
     animation-name: animatetop;
     animation-duration: 0.4s
 }
+.modal-content img {
+	max-height: 888px;
+	max-width: 999px;
+}
 
 /* 添加动画 */
 @-webkit-keyframes animatetop {

@@ -34,8 +34,7 @@ class Files(models.Model):
 
 
 class History(models.Model):
-    id = models.IntegerField(primary_key=True, verbose_name='主键')
-    file_id = models.CharField(max_length=20, default=None, verbose_name='文件Id')
+    id = models.CharField(max_length=20, default=None, primary_key=True, verbose_name='文件Id')
     file_name = models.CharField(max_length=50, default=None, verbose_name='文件名')
     operate = models.CharField(max_length=10, default=None, verbose_name='操作类型')
     operate_time = models.DateTimeField(null=True, verbose_name='操作时间')
@@ -44,7 +43,6 @@ class History(models.Model):
 
     class Meta:
         db_table = 'history'
-        indexes = [models.Index(fields=['file_id'])]
 
 
 class Delete(models.Model):
@@ -66,10 +64,13 @@ class Delete(models.Model):
 
 
 class Shares(models.Model):
-    id = models.CharField(max_length=20, default=None, primary_key=True, verbose_name='文件ID')
+    id = models.IntegerField(primary_key=True, verbose_name='主键')
+    file_id = models.CharField(max_length=20, default=None, verbose_name='文件ID')
     name = models.CharField(max_length=50, default=None, verbose_name='文件名')
     path = models.CharField(max_length=30, default=None, verbose_name='文件路径')
-    times = models.IntegerField(default=None, verbose_name='分享链接打开次数')
+    format = models.CharField(max_length=8, default=None, verbose_name='文件格式')
+    times = models.IntegerField(default=None, verbose_name='链接已打开次数')
+    total_times = models.IntegerField(default=None, verbose_name='分享链接打开最大次数')
     create_time = models.DateTimeField(null=True, verbose_name='创建时间')
     objects = models.Manager()
 

@@ -1,22 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
+import os
 import time
 import json
 import random
 import logging
+import zipfile
 import traceback
 from django.shortcuts import render
 from django.core import serializers
 from django.db.models import Q
+from django.http import StreamingHttpResponse, Http404, HttpResponseRedirect
 from django.db.models.deletion import ProtectedError
-from .models import Catalog, Files, History
+from .models import Catalog, Files, History, Delete, Shares
 from common.Results import result
 from common.Messages import Msg
 from common.MinioStorage import MinIOStorage
 
 
 storage = MinIOStorage()
+formats = {'image': ['jpg', 'jpeg', 'bmp', 'png'], 'video': ['mp4', 'avi'], 'document': ['txt', 'md'],
+           'docx': ['docx'], 'xlsx': ['xlsx'], 'pptx': ['pptx'], 'pdf': ['pdf'], 'music': ['mp3']}
+content_type = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': '', 'png': '', 'pdf': 'application/pdf',
+                'mp4': 'video/mp4'}
 
 
 def login(request):
@@ -75,7 +82,7 @@ def upload_file(request):
             try:
                 file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
                 current_time = time.strftime('%Y-%m-%d %H:%M:%S')
-                file = Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=content_type.split('/')[-1],
+                Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=content_type.split('/')[-1],
                                             parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
                                             size=file_size, md5=res.etag, create_time=current_time, update_time=current_time)
                 return result(msg=Msg.MsgUploadSuccess.format(file_name), data=file_name)
@@ -87,6 +94,55 @@ def upload_file(request):
         else:
             return result(code=1, msg=Msg.MsgUploadFailure.format(file_name))
 
+
+def download_file(request):
+    if request.method == 'GET':
+        try:
+            file_id = request.GET.get('id')
+            file = Files.objects.get(id=file_id)
+            object_file = file.path.split('/')
+            response = StreamingHttpResponse(storage.download_bytes(object_file[0], object_file[-1]))
+            response['Content-Type'] = f'application/{file.format}'
+            response['Content-Disposition'] = f'attachment;filename="{file.name}"'
+            return response
+        except Exception as err:
+            logging.error(f'Download file failure: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgDownloadFailure, data=file_id)
+
+def download_multiple_file(request):
+    if request.method == 'GET':
+        try:
+            file_ids = request.GET.get('id')
+            file_list = file_ids.split(',')
+            files = Files.objects.filter(id__in=file_list)
+            zip_multiple_file(files)
+            response = StreamingHttpResponse(open('temp/temp.zip', 'rb'))
+            response['Content-Type'] = 'application/zip'
+            response['Content-Disposition'] = 'attachment;filename="download.zip"'
+            return response
+        except Exception as err:
+            logging.error(f'Download multiple files failure: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgDownloadFailure)
+
+def export_folder(request):
+    if request.method == "GET":
+        try:
+            folder_id = request.GET.get('id')
+            files = Files.objects.filter(parent_id=folder_id)
+            if len(files) < 1:
+                return result(code=1, msg=Msg.MsgExportError)
+            folder_name = files[0].parent.name
+            zip_multiple_file(files)
+            response = StreamingHttpResponse(open('temp/temp.zip', 'rb'))
+            response['Content-Type'] = 'application/zip'
+            response['Content-Disposition'] = f'attachment;filename="{folder_name}.zip"'
+            return response
+        except Exception as err:
+            logging.error(f'Export folder failure: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgDownloadFailure)
 
 def rename_file(request):
     if request.method == 'POST':
@@ -124,10 +180,31 @@ def delete_folder(request):
 
 
 def delete_file(request):
-    if request.method == 'GET':
+    if request.method == 'POST':
         try:
-            file_id = request.GET.get('id')
-            Files.objects.get(id=file_id).delete()
+            file_id = request.POST.get('file_id')
+            is_delete = request.POST.get('type')
+            file_list = file_id.split(',')
+            current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+            if is_delete == '0':
+                files = Files.objects.filter(id__in=file_list)
+                for file in files:
+                    Delete.objects.create(id=file.id, name=file.name, origin_name=file.origin_name, format=file.format,
+                                          parent_id=file.parent_id, path=file.path, size=file.size, md5=file.md5,
+                                          create_time=file.create_time, update_time=file.update_time, delete_time=current_time)
+                files.delete()
+            if is_delete == '1':
+                files = Delete.objects.filter(id__in=file_list)
+                for file in files:
+                    History.objects.create(id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip='')
+                files.delete()
+            if is_delete == '9':
+                files = Delete.objects.all()
+                for file in files:
+                    History.objects.create(id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip='')
+                files.delete()
+            if is_delete == '6':
+                Shares.objects.get(id=file_id).delete()
             logging.info(f'Delete Folder success, File-id: {file_id}')
             return result(msg=Msg.MsgDeleteSuccess)
         except Exception as err:
@@ -278,8 +355,8 @@ def get_file_by_format(request):
             sorted = request.POST.get('sorted')
             sorted_type = request.POST.get('sorted_type')
             order_type = f'-{sorted_type}' if sorted == 'desc' else f'{sorted_type}'
-            file_count = Files.objects.filter(format=file_format).count()
-            files = Files.objects.filter(format=file_format).order_by(order_type)[(page_num - 1) * page_size: page_num * page_size]
+            file_count = Files.objects.filter(format__in=formats[file_format]).count()
+            files = Files.objects.filter(format__in=formats[file_format]).order_by(order_type)[(page_num - 1) * page_size: page_num * page_size]
             all_files = json.loads(serializers.serialize('json', files))
             return result(data={'data': all_files, 'total_page': file_count // page_size + 1, 'page': page_num}, msg=Msg.MsgGetFileSuccess)
         except Exception as err:
@@ -307,15 +384,10 @@ def move_to_folder(request):
             to_id = request.POST.get('to_id')
             move_type = request.POST.get('move_type')
             if move_type == 'folder':
-                folder = Catalog.objects.get(id=from_id)
-                folder.parent_id = to_id
-                folder.update_time = time.strftime('%Y-%m-%d %H:%M:%S')
-                folder.save()
-            if move_type == 'file':
-                file = Files.objects.get(id=from_id)
-                file.parent_id = to_id
-                file.update_time = time.strftime('%Y-%m-%d %H:%M:%S')
-                file.save()
+                Catalog.objects.filter(id=from_id).update(parent_id = to_id, update_time = time.strftime('%Y-%m-%d %H:%M:%S'))
+            else:
+                file_list = from_id.split(',')
+                Files.objects.filter(id__in=file_list).update(parent_id = to_id, update_time = time.strftime('%Y-%m-%d %H:%M:%S'))
 
             return result(msg=Msg.MsgMoveSuccess)
         except Exception as err:
@@ -323,3 +395,91 @@ def move_to_folder(request):
             logging.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgMoveFailure)
 
+
+def get_garbage(request):
+    if request.method == 'GET':
+        try:
+            page_num = request.GET.get('page')
+            page_num = int(page_num) if page_num else 1
+            total_num = Delete.objects.all().count()
+            files = Delete.objects.all().order_by('-delete_time')[(page_num - 1) * 20: page_num * 20]
+            return result(msg=Msg.MsgGetFileSuccess, data={'data': json.loads(serializers.serialize('json', files)),
+                                                           'total_page': total_num // 20 + 1, 'page': page_num})
+        except Exception as err:
+            logging.error(f'Get garbage error: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgGetFileFailure)
+
+
+def recovery_file_from_garbage(request):
+    if request.method == 'GET':
+        try:
+            file_ids = request.GET.get('id')
+            file_list = file_ids.split(',')
+            files = Delete.objects.filter(id__in=file_list)
+            for file in files:
+                Files.objects.create(id=file.id, name=file.name, origin_name=file.origin_name, format=file.format,
+                              parent_id=file.parent_id, path=file.path, size=file.size, md5=file.md5,
+                              create_time=file.create_time, update_time=file.update_time)
+            files.delete()
+            return result(msg=Msg.MsgOperateSuccess)
+        except Exception as err:
+            logging.error(f'Recovery file from garbage error: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgOperateFailure)
+
+def zip_multiple_file(file_list):
+    archive = zipfile.ZipFile('temp/temp.zip', 'w', zipfile.ZIP_DEFLATED)
+    for file in file_list:
+        object_file = file.path.split('/')
+        storage.save_file(object_file[0], object_file[-1], file.name)
+        archive.write('temp/' + file.name, file.name)
+        os.remove('temp/' + file.name)
+    archive.close()
+
+
+def share_file(request):
+    if request.method == 'POST':
+        try:
+            file_id = request.POST.get('file_id')
+            times = request.POST.get('times')
+            times = int(times) if times else 5
+            file = Files.objects.get(id=file_id)
+            Shares.objects.create(id=int(time.time()) % 10000, file_id=file.id, name=file.name, path=file.path, format=file.format,
+                                  times=0, total_times=times, create_time=time.strftime('%Y-%m-%d %H:%M:%S'))
+            return result(msg=Msg.MsgShareSuccess)
+        except Exception as err:
+            logging.error(f'Share file failure: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgShareFailure)
+
+
+def get_share_file(request):
+    if request.method == 'GET':
+        try:
+            files = Shares.objects.all().order_by('-create_time')
+            return result(msg=Msg.MsgGetFileSuccess, data=json.loads(serializers.serialize('json', files)))
+        except Exception as err:
+            logging.error(f'Get files error: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgGetFileFailure)
+
+
+def open_share_file(request):
+    if request.method == 'GET':
+        try:
+            share_id = request.GET.get('id')
+            share = Shares.objects.get(id=share_id)
+            if share.times < share.total_times:
+                path = share.path.split('/')
+                response = StreamingHttpResponse(storage.download_bytes(path[0], path[-1]))
+                response['Content-Type'] = content_type[share.format]
+                response['Content-Disposition'] = f'inline;filename="{share.name}"'
+                share.times = share.times + 1
+                share.save()
+                return response
+            else:
+                return render(request, '404.html')
+        except Exception as err:
+            logging.error(f'Open share file failure: {err}')
+            return render(request, '404.html')

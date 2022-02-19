@@ -12,6 +12,9 @@ let all_icons = {
 };
 let folder_window = '<div class="modal-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">新建文件夹</h2></div><div class="modal-body"><div><label>名称：</label><input id="folder_name" type="text" placeholder="请输入名称"></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>';
 let move_folder = '<div class="move-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">移动文件</h2></div><div class="modal-body"><div><label>移动到目录：</label><input id="folder_name" type="text" placeholder="请选择目标目录" value="/" name="520" readonly></div><div><label>选择目录：</label><div id="folder-tree"><ul class="domtree"><li onclick="get_folders(\'520\')">/</li><ul id="520"></ul></ul></div></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>'
+let table_head = '<th width="2%" style="text-align: center;"><input type="checkbox" id="checkout" onclick="checkout_box()"></th><th width="30%">名称</th><th width="10%">大小</th><th width="8%">格式</th><th width="15%">创建时间</th> <th width="15%">修改时间</th><th width="20">操作</th>';
+let image_video = 'jpg,jpeg,bmp,png,mp4,avi,pdf';
+let image_flat = 'jpg,jpeg,bmp,png';
 refresh_folder();
 function change_layout(results) {
     let layout = document.getElementById("layout").value;
@@ -107,6 +110,38 @@ function connect_modal(folder_id, name, url) {
         }
     }
 }
+function op_selected(op) {
+    let checkson = document.getElementsByName("selected_file");
+    let file_ids = "";
+    for (let i=0; i<checkson.length; i++) {
+        if (checkson[i].checked) {
+            file_ids += checkson[i].value + ',';
+        }
+    }
+    file_ids = file_ids.substr(0, file_ids.length - 1)
+    if (!file_ids) {
+        $.Toast('请选择文件', 'warning');
+        return;
+    }
+    if (op === 'move') {
+        move_to_folder(file_ids, 'file');
+    }
+    if (op === 'delete') {
+        delete_file(file_ids, 0);
+    }
+    if (op === 'garbage') {
+        delete_file(file_ids, 1);
+    }
+    if (op === 'empty') {
+        delete_file(1,9);
+    }
+    if (op === 'recovery') {
+        recovery_file(file_ids)
+    }
+    if (op === 'download') {
+        window.location.href = "file/multiple/download?id=" + file_ids;
+    }
+}
 function move_to_folder(file_id, file_type) {
     let modal = document.getElementById('moving');
     modal.innerHTML = move_folder;
@@ -194,6 +229,8 @@ function get_root_folder() {
     document.getElementById("current_path").setAttribute("value", "");
     // 重置查询文件格式
     document.getElementById("search").setAttribute("name", "");
+
+    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
     let sorted_type = document.getElementById("sort_type").value;
     let sorted = document.getElementById("sorted").value;
     get_files("520", sorted, sorted_type, 1, '', 'file/get');
@@ -267,7 +304,7 @@ function recent_file() {
     document.getElementById("current_path").setAttribute("value", "");
     // 重置查询文件格式
     document.getElementById("search").setAttribute("name", "");
-
+    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
     let page_size = 20;
     let layout = document.getElementById("layout").value;
     if (layout === '1') {page_size = 12;}
@@ -289,41 +326,49 @@ function recent_file() {
 }
 
 function display_files(results) {
+    document.getElementsByClassName("table_style")[0].innerHTML = table_head;
+    document.getElementById("layout-img").innerHTML = "";
     let s = "";
     for (let i=0; i<results.length; i++) {
         if (results[i]['model'] === "myfiles.catalog") {
-            s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
+            s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_folder"></td>';
             s = s + '<td onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="static/img/' + all_icons['folder'] + '">' + results[i]['fields']['name'] + '</td><td></td><td>文件夹</td>';
             s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
             s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-            s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'folder\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
+            s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="export_folder(\'' + results[i]['pk'] + '\')">导出</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'folder\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
         }
         if (results[i]['model'] === "myfiles.files") {
-            s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
-            s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+            s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></td>';
+            if (image_video.indexOf(results[i]['fields']['format']) > -1) {
+                s = s + '<td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+            } else {
+                s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+            }
             s = s + '<td>' + (results[i]['fields']['size'] / 1024).toFixed(2) + ' KB</td>';
             s = s + '<td>' + results[i]['fields']['format'] + '</td>';
             s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
             s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-            s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
+            s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="download_file(\'' + results[i]['pk'] + '\')">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="share_file(\'' + results[i]['pk'] + '\')">分享</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 0)">删除</button></td></tr>';
         }
     }
     document.getElementById("tbody").innerHTML = s;
 }
 function flat_img(results) {
+    document.getElementsByClassName("table_style")[0].innerHTML = "";
+    document.getElementById("tbody").innerHTML = "";
     let s = "";
     let type_icon = 'folder';
     for (let i=0; i<results.length; i++) {
         if (results[i]['model'] === "myfiles.catalog") {
-            s = s + '<div class="div-img"><div onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="/static/img/' + all_icons['folder'] + '"></div><div class="checkoutbox"><input type="checkbox"></div>';
+            s = s + '<div class="div-img"><div onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="static/img/' + all_icons['folder'] + '"></div><div class="checkoutbox"><input type="checkbox"></div>';
             s = s + '<textarea id="' + results[i]['pk'] + '" name="' + type_icon + '" onfocusout="textarea_mouseout(this.id, this.name)" title="' + results[i]['fields']['name'] + '">'+ results[i]['fields']['name'] +'</textarea></div>';
         }
         if (results[i]['model'] === "myfiles.files") {
-            let src = '/static/img/' + all_icons[results[i]['fields']['format']];
-            if (results[i]['fields']['format'] === 'jpeg') {
+            let src = 'static/img/' + all_icons[results[i]['fields']['format']];
+            if (image_flat.indexOf(results[i]['fields']['format']) > -1) {
                 src = 'getFile/' + results[i]['fields']['path'];
             }
-            s = s + '<div class="div-img"><div><img src="' + src + '"></div><div class="checkoutbox"><input type="checkbox"></div>';
+            s = s + '<div class="div-img"><div><img src="' + src + '"></div><div class="checkoutbox"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></div>';
             s = s + '<textarea id="' + results[i]['pk'] + '" name="' + type_icon + '" onfocusout="textarea_mouseout(this.id, this.name)" title="' + results[i]['fields']['name'] + '">' + results[i]['fields']['name'] + '</textarea></div>';
         }
     }
@@ -349,18 +394,37 @@ function delete_folder(folder_id) {
         }
     })
 }
-function delete_file(file_id) {
-    let answer = confirm('确定删除文件吗？');
+function delete_file(file_id, is_delete) {
+    let answer = "";
+    if (is_delete === 0) {
+        answer = confirm('确定删除到回收站吗？');
+    } else if (is_delete === 6) {
+        answer = confirm('确定删除文件分享链接吗？');
+    } else {
+        answer = confirm('确定删除文件吗？不可恢复哦~');
+    }
     if (!answer) {
         return;
     }
+    let post_data = {
+        type: is_delete,
+        file_id: file_id
+    }
     $.ajax({
-        type: "GET",
-        url: "file/delete?id=" + file_id,
+        type: "POST",
+        url: "file/delete",
+        data: post_data,
+        dataType: "json",
         success: function (data) {
             if (data['code'] === 0) {
                 $.Toast(data['msg'], 'success');
-                refresh_folder();
+                if (is_delete === 0) {
+                    refresh_folder();
+                } else if (is_delete === 6) {
+                    get_share_file();
+                } else {
+                    get_garbage(1);
+                }
             } else {
                 $.Toast(data['msg'], 'error');
                 return;
@@ -396,24 +460,29 @@ function search_file(page_num) {
         success: function (data) {
             if (data['code'] === 0) {
                 $.Toast(data['msg'], 'success');
+                document.getElementsByClassName("table_style")[0].innerHTML = table_head;
                 let s = "";
                 let results = data['data']['data'];
                 for (let i=0; i<results.length; i++) {
                     if (results[i]['model'] === "myfiles.catalog") {
-                        s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
+                        s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_folder"></td>';
                         s = s + '<td onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="static/img/' + all_icons['folder'] + '">' + results[i]['fields']['name'] + '</td><td></td><td>文件夹</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
                         s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['pk'] + '\')">文件位置</button></td></tr>';
                     }
                     if (results[i]['model'] === "myfiles.files") {
-                        s = s + '<tr><td style="text-align: center;"><input type="checkbox"></td>';
-                        s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                        s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></td>';
+                        if (image_video.indexOf(results[i]['fields']['format']) > -1) {
+                            s = s + '<td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                        } else {
+                            s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                        }
                         s = s + '<td>' + (results[i]['fields']['size'] / 1024).toFixed(2) + ' KB</td>';
                         s = s + '<td>' + results[i]['fields']['format'] + '</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-                        s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\')">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['fields']['parent'] + '\')">文件位置</button></td></tr>';
+                        s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 0)">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['fields']['parent'] + '\')">文件位置</button></td></tr>';
                     }
                 }
                 document.getElementById("tbody").innerHTML = s;
@@ -478,6 +547,8 @@ function files_format(file_format) {
     document.getElementById("current_path").setAttribute("name", "520");
     // 重置文件路径
     document.getElementById("current_path").setAttribute("value", "");
+
+    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
     refresh_folder();
 }
 
@@ -500,7 +571,39 @@ function get_folders(folder_id) {
         }
     })
 }
+function show_message(name, file_list) {
+    document.getElementById('title-name').innerText = name;
+    let modal = document.getElementById('myModal');
+    let close_a = document.getElementsByClassName("modal-header")[0];
+    let cancel_a = document.getElementsByClassName("cancel")[0];
+    let submit_a = document.getElementsByClassName("submit")[0];
+    let display_text = document.getElementsByClassName('modal-body')[0];
+    display_text.style.cssText = "margin-left:5%; margin-top:3%;";
+    display_text.innerHTML = file_list;
 
+    modal.style.display = "block";
+
+    close_a.onclick = function() {
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+    cancel_a.onclick = function() {
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+
+    submit_a.onclick = function() {
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            modal.innerHTML = '';
+            modal.style.display = "none";
+        }
+    }
+}
 function upload_file() {
     let fileUpload_input = document.getElementById("fileUpload-input");
     let folder_id = document.getElementById("current_path").getAttribute("name");
@@ -545,25 +648,214 @@ function upload_file() {
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if(xhr.status === 200) {
-                        success_num += 1;
                         progressBar.value = success_num;
                         percentageDiv.innerHTML = (success_num / total_files * 100).toFixed(2) + "%";
-                        console.log(xhr.responseText);
+                        success_num += 1;
                     } else {
                         failure_num += 1;
                         failure_file.push(files[i].name)
-                        console.log(failure_file);
                     }
 
                     if ((success_num + failure_num) === total_files) {
-                            refresh_folder();
-                            $('.modal_cover').css("display", "none");
-                            $('.modal_gif').css("display", "none");
+                        $('.modal_cover').css("display", "none");
+                        $('.modal_gif').css("display", "none");
+                        if (failure_num === 0) {
+                            $.Toast(success_num + '个文件上传成功', 'success');
+                        } else {
+                            $.Toast(success_num + '个文件上传成功, ' + failure_num + '个文件上传失败', 'warning');
+                            let s = "";
+                            for (let i=0; i<failure_file.length; i++) {
+                                s += "<p>" + failure_file[i] + "</p>";
+                            }
+                            document.getElementById("myModal").innerHTML = folder_window;
+                            show_message("上传失败的文件：", s);
                         }
+                        refresh_folder();
+                    }
                 }
             }
 
             xhr.send(form_data);
         }
     }
+}
+
+function show_file(path, format) {
+    if ('pdf,mp4,avi'.indexOf(format) > -1) {
+        window.open('getFile/' + path);
+    } else {
+        let modal = document.getElementById('myModal');
+        modal.innerHTML = folder_window;
+        let modal_content = document.getElementsByClassName("modal-content")[0];
+        modal_content.style.cssText = "background-color: transparent;";
+        modal.style.display = "block";
+        modal_content.innerHTML = '<img src="getFile/' + path + '">';
+        // modal_content.innerHTML = '<video autoplay><source src="getFile/' + path + '" type="video/mp4"></video>';
+
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                modal.innerHTML = '';
+                modal.style.display = "none";
+            }
+        }
+    }
+}
+
+function checkout_box() {
+    let checked = document.getElementById("checkout").checked;
+    let checkson = document.getElementsByName("selected_file");
+    if (checked) {
+        for (let i = 0; i < checkson.length; i++) {
+            checkson[i].checked = true;
+        }
+    } else {
+        for (let i = 0; i < checkson.length; i++) {
+            checkson[i].checked = false;
+        }
+    }
+}
+
+function get_garbage(page) {
+    document.getElementById("operation").innerHTML = '操作：<button onclick="op_selected(\'garbage\')">删除选中文件</button><button onclick="op_selected(\'recovery\')">还原选中文件</button><button onclick="delete_file(1,9)">清空回收站</button>';
+    document.getElementById("layout-img").innerHTML = "";
+    $.ajax({
+        type: "GET",
+        url: "file/garbage?page=" + page,
+        success: function (data) {
+            if (data['code'] === 0) {
+                document.getElementsByClassName("table_style")[0].innerHTML = table_head.substr(0, table_head.length - 22) + '<th width="13%">删除时间</th><th width="7">操作</th>';
+                let s = "";
+                let results = data['data']['data'];
+                for (let i=0; i<results.length; i++) {
+                    s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></td>';
+                    if (image_video.indexOf(results[i]['fields']['format']) > -1) {
+                        s = s + '<td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                    } else {
+                        s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                    }
+                    s = s + '<td>' + (results[i]['fields']['size'] / 1024).toFixed(2) + ' KB</td>';
+                    s = s + '<td>' + results[i]['fields']['format'] + '</td>';
+                    s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
+                    s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
+                    s = s + '<td>' + results[i]['fields']['delete_time'].replace('T', ' ') + '</td>';
+                    s = s + '<td><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 1)">删除</button></td></tr>';
+                }
+                document.getElementById("tbody").innerHTML = s;
+                PagingManage($('#paging'), data['data']['total_page'], data['data']['page'], 'get_garbage(')
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
+}
+
+function recovery_file(file_id) {
+    $.ajax({
+        type: "GET",
+        url: "file/recovery?id=" + file_id,
+        success: function (data) {
+            if (data['code'] === 0) {
+                $.Toast(data['msg'], 'success');
+                get_garbage(1);
+            } else {
+                $.Toast(data['msg'], 'error');
+                return;
+            }
+        }
+    })
+}
+
+function download_file(file_id) {
+    window.open("file/download?id=" + file_id);
+}
+function export_folder(folder_id) {
+    window.open("folder/export?id=" + folder_id);
+}
+
+function share_file(file_id) {
+    let modal = document.getElementById('myModal');
+    modal.innerHTML = folder_window;
+    document.getElementsByClassName("modal-body")[0].getElementsByTagName("label")[0].innerHTML = '链接打开次数：';
+    document.getElementById("folder_name").setAttribute("placeholder", '分享链接打开的最大次数');
+    document.getElementById('title-name').innerText = '分享文件 ' + file_id;
+    let close_a = document.getElementsByClassName("modal-header")[0];
+    let cancel_a = document.getElementsByClassName("cancel")[0];
+    let submit_a = document.getElementsByClassName("submit")[0];
+
+    modal.style.display = "block";
+
+    close_a.onclick = function() {
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+    cancel_a.onclick = function() {
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+
+    submit_a.onclick = function() {
+        let times = document.getElementById("folder_name").value;
+
+        if (!times) {
+            $.Toast('请输入文件分享链接访问次数哦 ~ ', 'error');
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "file/share",
+            data: {file_id: file_id, times: times},
+            dataType: "json",
+            success: function (data) {
+                if (data['code'] === 0) {
+                    $.Toast(data['msg'], 'success');
+                } else {
+                    $.Toast(data['msg'], 'error');
+                }
+            }
+        })
+        modal.innerHTML = '';
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            modal.innerHTML = '';
+            modal.style.display = "none";
+        }
+    }
+}
+
+function get_share_file() {
+    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
+    $.ajax({
+        type: "GET",
+        url: "file/getShare",
+        success: function (data) {
+            if (data['code'] === 0) {
+                document.getElementsByClassName("table_style")[0].innerHTML = '<th width="30%">名称</th><th width="10%">已打开次数</th><th width="8%">总次数</th><th width="15%">创建时间</th><th width="20">操作</th>';
+                let s = "";
+                let results = data['data'];
+                for (let i=0; i<results.length; i++) {
+                    if (results[i]['fields']['format'] === 'jpeg') {
+                        s = s + '<td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                    } else {
+                        s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                    }
+                    s = s + '<td>' + results[i]['fields']['times'] + '</td>';
+                    s = s + '<td>' + results[i]['fields']['total_times'] + '</td>';
+                    s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
+                    s = s + '<td><button class="actions" onclick="show_share_link(\'' + results[i]['pk'] + '\')">查看分享链接</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 6)">删除</button></td></tr>';
+                }
+                document.getElementById("tbody").innerHTML = s;
+                PagingManage($('#paging'), 1, 1, 'abc')
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
+}
+function show_share_link(file_id) {
+    let share_url = window.location.href + 'open?id=' + file_id;
+    confirm('分享链接为：' + share_url);
 }

@@ -6,7 +6,7 @@
             stack: false,
             position_class: "toast-top-center",
             fullscreen:false,
-            width: 250,
+            width: 350,
             spacing:20,
             timeout: 3000,
             has_close_btn:false,

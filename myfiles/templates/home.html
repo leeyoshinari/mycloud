@@ -11,11 +11,11 @@
 
 {% block addbody %}
     <div class="container1">
-        <a target="_blank" onclick="get_files_by_folder()">首页</a>
+        <a target="_blank" onclick="get_root_folder()">我的云盘</a>
     </div>
     <div class="container2">
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1023.ico' %}">
+            <img src="{% static 'img/favicon.ico' %}">
             <button onclick="get_root_folder()">我的云盘</button>
         </div>
         <div class="list-icon">
@@ -23,16 +23,8 @@
             <button onclick="recent_file()">最新文件</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1003.ico' %}">
-            <button onclick="files_format('jpg')">图片</button>
-        </div>
-        <div class="list-icon">
-            <img src="{% static 'img/imageres_1005.ico' %}">
-            <button onclick="files_format('mp4')">视频</button>
-        </div>
-        <div class="list-icon">
-            <img src="{% static 'img/imageres_1004.ico' %}">
-            <button onclick="files_format('mp3')">音乐</button>
+            <img src="{% static 'img/imageres_1002.ico' %}">
+            <button onclick="files_format('document')">我的文档</button>
         </div>
         <div class="list-icon">
             <img src="{% static 'img/docx.png' %}">
@@ -51,16 +43,24 @@
             <button onclick="files_format('pdf')">PDF文档</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1002.ico' %}">
-            <button onclick="files_format('txt')">TXT文本</button>
+            <img src="{% static 'img/imageres_1003.ico' %}">
+            <button onclick="files_format('image')">图片</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1002.ico' %}">
-            <button onclick="">我的分享</button>
+            <img src="{% static 'img/imageres_1005.ico' %}">
+            <button onclick="files_format('video')">视频</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1002.ico' %}">
-            <button onclick="">回收站</button>
+            <img src="{% static 'img/imageres_1004.ico' %}">
+            <button onclick="files_format('music')">音乐</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/share.png' %}">
+            <button onclick="get_share_file()">我的分享</button>
+        </div>
+        <div class="list-icon">
+            <img src="{% static 'img/garbage.png' %}">
+            <button onclick="get_garbage(1)">回收站</button>
         </div>
         <div class="list-icon" style="display: none;">
             <img src="{% static 'img/imageres_3.ico' %}">
@@ -107,12 +107,12 @@
                         <option value="asc">递增</option>
                     </select>
                 </label>
-                <label>操作：
+                <label id="operation">操作：
                     <button onclick="upload_file()">上传</button>
-                    <button>下载</button>
+                    <button onclick="op_selected('download')">下载</button>
                     <button onclick="create_folder()">新建文件夹</button>
-                    <button>移动</button>
-                    <button>删除</button>
+                    <button onclick="op_selected('move')">移动</button>
+                    <button onclick="op_selected('delete')">删除</button>
                 </label>
 {#                <form action="" id ="fileUpload-form">#}
                     <input type="file" name="filename" id="fileUpload-input" multiple style="display: none">
@@ -122,17 +122,7 @@
         </div>
         <div class="detail">
             <table id="layout-table">
-                <thead>
-                    <tr class="table_style">
-                        <th width="2%" style="text-align: center;"><input type="checkbox"></th>
-                        <th width="30%">名称</th>
-                        <th width="10%">大小</th>
-                        <th width="8%">格式</th>
-                        <th width="15%">创建时间</th>
-                        <th width="15%">修改时间</th>
-                        <th width="20">操作</th>
-                    </tr>
-                </thead>
+                <thead><tr class="table_style"></tr></thead>
                 <tbody id="tbody"></tbody>
             </table>
             <div id="layout-img"></div>

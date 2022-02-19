@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
+import os
 import logging
 import traceback
 from django.conf import settings
@@ -22,6 +23,9 @@ class MinIOStorage:
 
         self.connect_minio()
         self.init_bucket()
+
+        if not os.path.exists('temp'):
+            os.mkdir('temp')
 
     def connect_minio(self):
         self.client = Minio(self.host, access_key=self.access_key, secret_key=self.secret_key, secure=False)
@@ -48,7 +52,7 @@ class MinIOStorage:
             return res
         except Exception as err:
             logging.error(err)
-            logging.error(traceback)
+            logging.error(traceback.format_exc())
             return None
 
     def upload_file_bytes(self, bucket_name: str, object_name: str, data: bytes, length: int, content_type=None):
@@ -57,7 +61,7 @@ class MinIOStorage:
             return res
         except Exception as err:
             logging.error(err)
-            logging.error(traceback)
+            logging.error(traceback.format_exc())
             return None
 
     def delete_file(self, bucket_name: str, object_names: list):
@@ -66,14 +70,23 @@ class MinIOStorage:
             return res
         except Exception as err:
             logging.error(err)
-            logging.error(traceback)
+            logging.error(traceback.format_exc())
             return None
 
     def download_bytes(self, bucket_name: str, object_name: str):
         try:
             res = self.client.get_object(bucket_name, object_name)
-            return res.data
+            return res
         except Exception as err:
             logging.error(err)
-            logging.error(traceback)
+            logging.error(traceback.format_exc())
+            return None
+
+    def save_file(self, bucket_name: str, object_name: str, file_path: str):
+        try:
+            res = self.client.fget_object(bucket_name, object_name, 'temp/'+ file_path)
+            return res
+        except Exception as err:
+            logging.error(err)
+            logging.error(traceback.format_exc())
             return None
