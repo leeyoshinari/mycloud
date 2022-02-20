@@ -11,30 +11,9 @@
                 <h1>Expanded Editor.md</h1>
             </header>
             <div id="editormd">
-                <textarea style="display:none;"></textarea>
+                <textarea style="display:none;">{{ content|safe }}</textarea>
             </div>
         </div>        
-        <script src="{% static 'js/jquery.min.js' %}"></script>
         <script src="{% static 'editor.md/js/editormd.js' %}"></script>
-        <script type="text/javascript">
-            let testEditor;
-            $(function() {
-                testEditor = editormd("editormd", {
-                    width  : "90%",
-                    height : 720,
-                    path   : '../static/editor.md/lib/',
-                    {#markdown: md,#}
-                    codeFold: true,
-                    searchReplace: true,
-                    emoji: true,
-                    sequenceDiagram: true,
-                    taskList: true,
-                    tocm: true,
-                    {#tex: true,#}
-                    flowChart: true,
-                    imageUpload: true,
-                    imageFormats: ["jpg", "jpeg", "png", "bmp", "gif"],
-                });
-            });
-        </script>
+        <script src="{% static 'js/md.js' %}"></script>
 {% endblock %}

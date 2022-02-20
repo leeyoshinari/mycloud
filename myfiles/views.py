@@ -9,6 +9,7 @@ import logging
 import zipfile
 import hashlib
 import traceback
+import markdown
 from django.shortcuts import render
 from django.core import serializers
 from django.contrib import auth
@@ -543,4 +544,7 @@ def get_history(request):
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 def md_view(request):
-    return render(request, 'extends.html')
+    path = '3029/71645366508.md'.split('/')
+    res = storage.download_bytes(path[0], path[-1])
+    d = res.data.decode()
+    return render(request, 'extends.html', context={'content': d})
