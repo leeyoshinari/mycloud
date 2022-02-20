@@ -455,11 +455,11 @@ tr:hover td {
 	top: 50%;
 	left: 34%;
 	width: 20%;
-	height: 6%;
+	height: 3%;
 }
 #percentage {
 	position: absolute;
-	top: 51%;
+	top: 50%;
 	left: 43%;
 	font-weight: bolder;
 	font-size: large;

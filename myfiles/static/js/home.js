@@ -616,10 +616,18 @@ function upload_file() {
         $('.modal_gif').css("display", "block");
         let files = event.target.files;
         let total_files = files.length;
+        if (total_files < 1) {
+            $('.modal_cover').css("display", "none");
+            $('.modal_gif').css("display", "none");
+            return;
+        }
         let success_num = 0;
+        let fast_upload_num = 0;
         let failure_num = 0;
         let failure_file = [];
         progressBar.max = total_files;
+        progressBar.value = success_num;
+        percentageDiv.innerHTML = (success_num / total_files * 100).toFixed(2) + "%";
 
         for (let i=0; i<total_files; i++) {
             let form_data = new FormData();
@@ -627,9 +635,9 @@ function upload_file() {
             form_data.append("name", files[i].name);
             form_data.append("type", files[i].type ? files[i].type : "");
             form_data.append("size", files[i].size);
-            form_data.append('index', i + 1);
-            form_data.append('total', total_files);
-            form_data.append('parent_id', folder_id);
+            form_data.append("index", i + 1);
+            form_data.append("total", total_files);
+            form_data.append("parent_id", folder_id);
 
             let xhr = new XMLHttpRequest();
             xhr.open("POST", "file/upload");
@@ -646,23 +654,44 @@ function upload_file() {
             }
 
             xhr.onreadystatechange = function() {
+                progressBar.value = success_num;
+                percentageDiv.innerHTML = (success_num / total_files * 100).toFixed(2) + "%";
                 if (xhr.readyState === 4) {
                     if(xhr.status === 200) {
-                        progressBar.value = success_num;
-                        percentageDiv.innerHTML = (success_num / total_files * 100).toFixed(2) + "%";
-                        success_num += 1;
+                        let res = JSON.parse(xhr.responseText);
+                        if (res['code'] === 0) {
+                            success_num += 1;
+                        } else if (res['code'] === 2) {
+                            fast_upload_num += 1;
+                        } else {
+                            failure_num += 1;
+                            failure_file.push(res['data']);
+                        }
                     } else {
                         failure_num += 1;
-                        failure_file.push(files[i].name)
+                        failure_file.push(res['data']);
                     }
 
-                    if ((success_num + failure_num) === total_files) {
+                    if ((success_num + fast_upload_num + failure_num) === total_files) {
                         $('.modal_cover').css("display", "none");
                         $('.modal_gif').css("display", "none");
-                        if (failure_num === 0) {
-                            $.Toast(success_num + '个文件上传成功', 'success');
-                        } else {
-                            $.Toast(success_num + '个文件上传成功, ' + failure_num + '个文件上传失败', 'warning');
+                        let msg = "";
+                        let level = "success";
+                        if (success_num > 0) {
+                            msg += success_num + '个文件上传成功';
+                        }
+                        if (fast_upload_num > 0) {
+                            if (msg.length > 0) {msg += '，';}
+                            msg += fast_upload_num + '个文件已经上传过';
+                            level = "warning";
+                        }
+                        if (failure_num > 0) {
+                            if (msg.length > 0) {msg += '，';}
+                            msg += failure_num + '个文件上传成功';
+                            level = "error";
+                        }
+                        $.Toast(msg, level);
+                        if (failure_num > 0) {
                             let s = "";
                             for (let i=0; i<failure_file.length; i++) {
                                 s += "<p>" + failure_file[i] + "</p>";
@@ -674,7 +703,6 @@ function upload_file() {
                     }
                 }
             }
-
             xhr.send(form_data);
         }
     }
@@ -838,7 +866,7 @@ function get_share_file() {
                 let results = data['data'];
                 for (let i=0; i<results.length; i++) {
                     if (results[i]['fields']['format'] === 'jpeg') {
-                        s = s + '<td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                        s = s + '<tr><td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                     } else {
                         s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                     }
@@ -858,4 +886,32 @@ function get_share_file() {
 function show_share_link(file_id) {
     let share_url = window.location.href + 'open?id=' + file_id;
     confirm('分享链接为：' + share_url);
+}
+
+function get_history(page) {
+    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
+    document.getElementById("layout-img").innerHTML = "";
+    if (!page) {page=1;}
+    $.ajax({
+        type: "GET",
+        url: "file/history?page=" + page,
+        success: function (data) {
+            if (data['code'] === 0) {
+                document.getElementsByClassName("table_style")[0].innerHTML = '<th width="15%">文件ID</th><th width="30%">文件名称</th><th width="10%">操作类型</th><th width="15%">操作IP</th><th width="20">操作时间</th>';
+                let s = "";
+                let results = data['data']['data'];
+                for (let i=0; i<results.length; i++) {
+                    s = s + '<tr><td>' + results[i]['fields']['file_id'] + '</td>';
+                    s = s + '<td>' + results[i]['fields']['file_name'] + '</td>';
+                    s = s + '<td>' + results[i]['fields']['operate'] + '</td>';
+                    s = s + '<td>' + results[i]['fields']['ip'] + '</td>';
+                    s = s + '<td>' + results[i]['fields']['operate_time'].replace('T', ' ') + '</td></tr>';
+                }
+                document.getElementById("tbody").innerHTML = s;
+                PagingManage($('#paging'), data['data']['total_page'], data['data']['page'], 'get_history(')
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
 }

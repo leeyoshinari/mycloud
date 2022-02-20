@@ -10,6 +10,7 @@ class Msg(object):
     MsgMoveSuccess = '移动成功'
     MsgMoveFailure = '移动失败'
     MsgUploadSuccess = '上传成功'
+    MsgFastUploadSuccess = '快速上传成功'
     MsgUploadFailure = '上传失败'
     MsgDownloadSuccess = '下载成功'
     MsgDownloadFailure = '下载失败'

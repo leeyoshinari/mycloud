@@ -34,7 +34,8 @@ class Files(models.Model):
 
 
 class History(models.Model):
-    id = models.CharField(max_length=20, default=None, primary_key=True, verbose_name='文件Id')
+    id = models.IntegerField(primary_key=True, verbose_name='主键')
+    file_id = models.CharField(max_length=20, default=None, verbose_name='文件Id')
     file_name = models.CharField(max_length=50, default=None, verbose_name='文件名')
     operate = models.CharField(max_length=10, default=None, verbose_name='操作类型')
     operate_time = models.DateTimeField(null=True, verbose_name='操作时间')

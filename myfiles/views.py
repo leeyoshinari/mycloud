@@ -7,6 +7,7 @@ import json
 import random
 import logging
 import zipfile
+import hashlib
 import traceback
 from django.shortcuts import render
 from django.core import serializers
@@ -16,6 +17,7 @@ from django.db.models.deletion import ProtectedError
 from .models import Catalog, Files, History, Delete, Shares
 from common.Results import result
 from common.Messages import Msg
+from common.md5 import calc_md5
 from common.MinioStorage import MinIOStorage
 
 
@@ -75,7 +77,14 @@ def upload_file(request):
         parent_id = request.POST.get('parent_id')
         content_type = form.content_type
         data = form.file
-        bucket_name = str(int(time.time() % 100) + 500)
+        md5 = calc_md5(data)
+        try:
+            file = Files.objects.get(md5=md5)
+            return result(code=2, msg=Msg.MsgFastUploadSuccess, data=file.name)
+        except Files.DoesNotExist:
+            data.seek(0)
+        random_i = int(time.time() % 100)
+        bucket_name = str((500 + random_i * 5) ^ (2521 - random_i * 2))
         object_name = str(random.randint(1, 99)) + str(int(time.time())) + '.' + file_name.split('.')[-1]
         res = storage.upload_file_bytes(bucket_name, object_name, data, file_size, content_type=content_type)
         if res:
@@ -84,15 +93,15 @@ def upload_file(request):
                 current_time = time.strftime('%Y-%m-%d %H:%M:%S')
                 Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=content_type.split('/')[-1],
                                             parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
-                                            size=file_size, md5=res.etag, create_time=current_time, update_time=current_time)
-                return result(msg=Msg.MsgUploadSuccess.format(file_name), data=file_name)
+                                            size=file_size, md5=md5, create_time=current_time, update_time=current_time)
+                return result(msg=Msg.MsgUploadSuccess, data=file_name)
             except Exception as err:
                 logging.error(err)
                 logging.error(traceback.format_exc())
                 storage.delete_file(bucket_name, res.object_name)
-                return result(code=1, msg=Msg.MsgUploadFailure.format(file_name))
+                return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
         else:
-            return result(code=1, msg=Msg.MsgUploadFailure.format(file_name))
+            return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
 
 
 def download_file(request):
@@ -184,6 +193,7 @@ def delete_file(request):
         try:
             file_id = request.POST.get('file_id')
             is_delete = request.POST.get('type')
+            host = request.headers.get('x-real_ip')
             file_list = file_id.split(',')
             current_time = time.strftime('%Y-%m-%d %H:%M:%S')
             if is_delete == '0':
@@ -196,13 +206,17 @@ def delete_file(request):
             if is_delete == '1':
                 files = Delete.objects.filter(id__in=file_list)
                 for file in files:
-                    History.objects.create(id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip='')
-                files.delete()
+                    path = file.path.split('/')
+                    History.objects.create(file_id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip=host)
+                    storage.delete_file(path[0], path[-1])
+                    file.delete()
             if is_delete == '9':
                 files = Delete.objects.all()
                 for file in files:
-                    History.objects.create(id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip='')
-                files.delete()
+                    path = file.path.split('/')
+                    History.objects.create(file_id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip=host)
+                    storage.delete_file(path[0], path[-1])
+                    file.delete()
             if is_delete == '6':
                 Shares.objects.get(id=file_id).delete()
             logging.info(f'Delete Folder success, File-id: {file_id}')
@@ -469,7 +483,10 @@ def open_share_file(request):
     if request.method == 'GET':
         try:
             share_id = request.GET.get('id')
+            host = request.headers.get('x-real-ip')
             share = Shares.objects.get(id=share_id)
+            History.objects.create(file_id=share.file_id, file_name=share.name, operate='openShare',
+                                   operate_time=time.strftime('%Y-%m-%d %H:%M:%S'), ip=host)
             if share.times < share.total_times:
                 path = share.path.split('/')
                 response = StreamingHttpResponse(storage.download_bytes(path[0], path[-1]))
@@ -483,3 +500,17 @@ def open_share_file(request):
         except Exception as err:
             logging.error(f'Open share file failure: {err}')
             return render(request, '404.html')
+
+def get_history(request):
+    if request.method == 'GET':
+        try:
+            page_num = request.GET.get('page')
+            page_num = int(page_num) if page_num else 1
+            total_num = History.objects.all().count()
+            hostory = History.objects.all().order_by('-operate_time')[(page_num - 1) * 20: page_num * 20]
+            return result(msg=Msg.MsgGetFileSuccess, data={'data': json.loads(serializers.serialize('json', hostory)),
+                                                       'total_page': total_num // 20 + 1, 'page': page_num})
+        except Exception as err:
+            logging.error(f'Get garbage error: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgGetFileFailure)

@@ -32,7 +32,7 @@ class MinIOStorage:
 
     def init_bucket(self):
         for i in range(100):
-            _ = self.create_bucket(str(i + 500))
+            _ = self.create_bucket(str((500 + i * 5) ^ (2521 - i * 2)))
 
     def create_bucket(self, bucket_name: str):
         try:
@@ -66,12 +66,10 @@ class MinIOStorage:
 
     def delete_file(self, bucket_name: str, object_names: list):
         try:
-            res = self.client.remove_objects(bucket_name, object_names)
-            return res
+            self.client.remove_object(bucket_name, object_names)
         except Exception as err:
             logging.error(err)
-            logging.error(traceback.format_exc())
-            return None
+            raise Exception(traceback.format_exc())
 
     def download_bytes(self, bucket_name: str, object_name: str):
         try:

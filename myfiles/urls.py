@@ -29,5 +29,6 @@ urlpatterns = [
     path('file/getByFormat', views.get_file_by_format, name='get_files_format'),
     path('file/garbage', views.get_garbage, name='get_garbage'),
     path('file/recovery', views.recovery_file_from_garbage, name='recovery_file'),
+    path('file/history', views.get_history, name='get_history'),
     path('open', views.open_share_file, name='open_share_file')
 ]
