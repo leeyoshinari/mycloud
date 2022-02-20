@@ -11,8 +11,8 @@ import hashlib
 import traceback
 from django.shortcuts import render
 from django.core import serializers
-from django.db.models import Q
-from django.http import StreamingHttpResponse, Http404, HttpResponseRedirect
+from django.contrib import auth
+from django.http import StreamingHttpResponse
 from django.db.models.deletion import ProtectedError
 from .models import Catalog, Files, History, Delete, Shares
 from common.Results import result
@@ -29,10 +29,32 @@ content_type = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': '', 'png': '',
 
 
 def login(request):
+    if request.method == 'POST':
+        if request.POST:
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            ip = request.headers.get('x-real-ip')
+            session = auth.authenticate(username=username, password=password)
+            if session:
+                auth.login(request, session)
+                request.session.set_expiry(3600)
+                return result(msg=Msg.MsgLonginSuccess)
+            else:
+                return result(code=1, msg=Msg.MsgLonginFailure)
+        else:
+            return result(code=1, msg=Msg.MsgParamError)
+    else:
+        return render(request, 'login.html')
+
+
+def logout(request):
+    auth.logout(request)
     return render(request, 'login.html')
+
 
 def home(request):
     return render(request, 'home.html')
+
 
 def create_folder(request):
     if request.method == 'POST':
@@ -119,6 +141,7 @@ def download_file(request):
             logging.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgDownloadFailure, data=file_id)
 
+
 def download_multiple_file(request):
     if request.method == 'GET':
         try:
@@ -134,6 +157,7 @@ def download_multiple_file(request):
             logging.error(f'Download multiple files failure: {err}')
             logging.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgDownloadFailure)
+
 
 def export_folder(request):
     if request.method == "GET":
@@ -152,6 +176,7 @@ def export_folder(request):
             logging.error(f'Export folder failure: {err}')
             logging.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgDownloadFailure)
+
 
 def rename_file(request):
     if request.method == 'POST':
@@ -193,7 +218,7 @@ def delete_file(request):
         try:
             file_id = request.POST.get('file_id')
             is_delete = request.POST.get('type')
-            host = request.headers.get('x-real_ip')
+            host = request.headers.get('x-real-ip')
             file_list = file_id.split(',')
             current_time = time.strftime('%Y-%m-%d %H:%M:%S')
             if is_delete == '0':
@@ -442,6 +467,7 @@ def recovery_file_from_garbage(request):
             logging.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgOperateFailure)
 
+
 def zip_multiple_file(file_list):
     archive = zipfile.ZipFile('temp/temp.zip', 'w', zipfile.ZIP_DEFLATED)
     for file in file_list:
@@ -500,6 +526,7 @@ def open_share_file(request):
         except Exception as err:
             logging.error(f'Open share file failure: {err}')
             return render(request, '404.html')
+
 
 def get_history(request):
     if request.method == 'GET':

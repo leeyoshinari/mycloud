@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'mycloud.mymiddleware.AccessAuthMiddleWare'
 ]
 
 ROOT_URLCONF = 'mycloud.urls'
@@ -170,6 +171,8 @@ LOGGING = {
         }
     },
 }
+
+EXCLUDE_URL = 'admin|login|open'
 
 # Minio
 MINIO_HOST = '127.0.0.1:9000'

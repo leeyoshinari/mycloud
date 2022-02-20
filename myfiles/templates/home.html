@@ -11,7 +11,8 @@
 
 {% block addbody %}
     <div class="container1">
-        <a target="_blank" onclick="get_root_folder()">我的云盘</a>
+        <img src="{% static 'img/favicon.ico' %}">
+        <a href="{% url 'myfiles:logout' %}">退出云盘</a>
     </div>
     <div class="container2">
         <div class="list-icon">

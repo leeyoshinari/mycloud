@@ -16,7 +16,17 @@ body{
 	background-color: #5bc0de;
 }
 .container1 a {
+	cursor: pointer;
+	margin-top: 3px;
+	margin-right: 1%;
+	float: right;
+	text-decoration: none;
+}
+.container1 img {
+	margin-top: 4px;
+	float: left;
 	margin-left: 1%;
+	height: 20px;
 }
 
 .container2 {

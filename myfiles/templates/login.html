@@ -9,18 +9,18 @@
 	<div class="logGet">
         <!-- 头部提示信息 -->
         <div class="lgT">
-            <p class="p2">MyCloud Personal Disk</p>
+            <p class="p2">Personal Disk</p>
         </div>
         <div class="logD logDtip">
             <p class="p1">登 录</p>
         </div>
         <!-- 输入框 -->
         <div class="lgD">
-            <img src="/static/img/login_user.png" width="20" height="20" alt=""/>
+            <img src="{% static 'img/login_user.png' %}" width="20" height="20" alt=""/>
             <input type="text" placeholder="输入用户名" id="username">
         </div>
         <div class="lgD">
-            <img src="/static/img/login_lock.png" width="20" height="20" alt=""/>
+            <img src="{% static 'img/login_lock.png' %}" width="20" height="20" alt=""/>
             <input type="password" placeholder="输入用户密码" id="password">
         </div>
         <div class="logC">
@@ -47,14 +47,14 @@
         $(function login_b1 () {
             $.ajax({
                 type: 'post',
-                url: "{% url 'images:login' %}",
-                data: JSON.stringify(postdata),
+                url: "{% url 'myfiles:login' %}",
+                data: postdata,
                 datatype: 'json',
                 success: function (data) {
                     console.log(data);
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
-                        window.location.href = "{% url 'images:home' %}";
+                        window.location.href = "{% url 'myfiles:home' %}";
                     }
                     else {
                         $.Toast(data['msg'], 'error');

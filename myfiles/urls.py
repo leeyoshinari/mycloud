@@ -7,6 +7,7 @@ from . import views
 app_name = 'myfiles'
 urlpatterns = [
     path('login', views.login, name='login'),
+    path('logout', views.logout, name='logout'),
     path('', views.home, name='home'),
     path('folder/get', views.get_folders_by_id, name='get_folder'),
     path('folder/create', views.create_folder, name='create_folder'),
