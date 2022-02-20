@@ -25,7 +25,7 @@ storage = MinIOStorage()
 formats = {'image': ['jpg', 'jpeg', 'bmp', 'png'], 'video': ['mp4', 'avi'], 'document': ['txt', 'md'],
            'docx': ['docx'], 'xlsx': ['xlsx'], 'pptx': ['pptx'], 'pdf': ['pdf'], 'music': ['mp3']}
 content_type = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': '', 'png': '', 'pdf': 'application/pdf',
-                'mp4': 'video/mp4'}
+                'mp4': 'video/mp4', 'zip': 'application/zip'}
 
 
 def login(request):
@@ -113,7 +113,7 @@ def upload_file(request):
             try:
                 file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
                 current_time = time.strftime('%Y-%m-%d %H:%M:%S')
-                Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=content_type.split('/')[-1],
+                Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=file_name.split('.')[-1],
                                             parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
                                             size=file_size, md5=md5, create_time=current_time, update_time=current_time)
                 return result(msg=Msg.MsgUploadSuccess, data=file_name)
@@ -133,7 +133,7 @@ def download_file(request):
             file = Files.objects.get(id=file_id)
             object_file = file.path.split('/')
             response = StreamingHttpResponse(storage.download_bytes(object_file[0], object_file[-1]))
-            response['Content-Type'] = f'application/{file.format}'
+            response['Content-Type'] = content_type[file.format]
             response['Content-Disposition'] = f'attachment;filename="{file.name}"'
             return response
         except Exception as err:
@@ -541,3 +541,6 @@ def get_history(request):
             logging.error(f'Get garbage error: {err}')
             logging.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
+
+def md_view(request):
+    return render(request, 'extends.html')

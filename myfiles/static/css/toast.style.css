@@ -6,7 +6,7 @@
   font-weight: normal;
   font-style: normal; }
 
-i {
+#toast_i {
   /* use !important to prevent issues with browser extensions that change fonts */
   font-family: 'toast' !important;
   speak: none;

@@ -53,7 +53,7 @@
         }
 
         if($options.has_icon){
-            $('<i class="toast-icon toast-icon-' + type + '"></i>').appendTo($element);
+            $('<i id="toast_i" class="toast-icon toast-icon-' + type + '"></i>').appendTo($element);
             if( $options.rtl){
                 css["padding-right"] = 0;
             } else {

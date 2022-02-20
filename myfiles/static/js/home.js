@@ -6,6 +6,7 @@ let all_icons = {
     "pptx": "ppt.png",
     "mp3": "imageres_1004.ico",
     "mp4": "imageres_1005.ico",
+    "flv": "imageres_1005.ico",
     "jpeg": "imageres_1003.ico",
     "txt": "imageres_1002.ico",
     "pdf": "pdf.png"
@@ -13,8 +14,9 @@ let all_icons = {
 let folder_window = '<div class="modal-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">新建文件夹</h2></div><div class="modal-body"><div><label>名称：</label><input id="folder_name" type="text" placeholder="请输入名称"></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>';
 let move_folder = '<div class="move-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">移动文件</h2></div><div class="modal-body"><div><label>移动到目录：</label><input id="folder_name" type="text" placeholder="请选择目标目录" value="/" name="520" readonly></div><div><label>选择目录：</label><div id="folder-tree"><ul class="domtree"><li onclick="get_folders(\'520\')">/</li><ul id="520"></ul></ul></div></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>'
 let table_head = '<th width="2%" style="text-align: center;"><input type="checkbox" id="checkout" onclick="checkout_box()"></th><th width="30%">名称</th><th width="10%">大小</th><th width="8%">格式</th><th width="15%">创建时间</th> <th width="15%">修改时间</th><th width="20">操作</th>';
-let image_video = 'jpg,jpeg,bmp,png,mp4,avi,pdf';
+let image_video = 'jpg,jpeg,bmp,png,mp4,avi,flv,pdf';
 let image_flat = 'jpg,jpeg,bmp,png';
+let open_new_tab = 'pdf,mp4,avi,flv';
 refresh_folder();
 function change_layout(results) {
     let layout = document.getElementById("layout").value;
@@ -709,7 +711,7 @@ function upload_file() {
 }
 
 function show_file(path, format) {
-    if ('pdf,mp4,avi'.indexOf(format) > -1) {
+    if (open_new_tab.indexOf(format) > -1) {
         window.open('getFile/' + path);
     } else {
         let modal = document.getElementById('myModal');

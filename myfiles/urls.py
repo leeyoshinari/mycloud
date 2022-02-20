@@ -31,5 +31,7 @@ urlpatterns = [
     path('file/garbage', views.get_garbage, name='get_garbage'),
     path('file/recovery', views.recovery_file_from_garbage, name='recovery_file'),
     path('file/history', views.get_history, name='get_history'),
-    path('open', views.open_share_file, name='open_share_file')
+    path('open', views.open_share_file, name='open_share_file'),
+
+    path('md/view', views.md_view, name='md_view')
 ]

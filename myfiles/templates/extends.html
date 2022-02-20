@@ -1,0 +1,40 @@
+{% extends 'template.html' %}
+{% load static %}
+
+{% block addcss %}
+<link rel="stylesheet" href="{% static 'editor.md/css/style.css' %}" />
+<link rel="stylesheet" href="{% static 'editor.md/css/editormd.css' %}" />
+{% endblock %}
+{% block addbody %}
+        <div id="layout">
+            <header>
+                <h1>Expanded Editor.md</h1>
+            </header>
+            <div id="editormd">
+                <textarea style="display:none;"></textarea>
+            </div>
+        </div>        
+        <script src="{% static 'js/jquery.min.js' %}"></script>
+        <script src="{% static 'editor.md/js/editormd.js' %}"></script>
+        <script type="text/javascript">
+            let testEditor;
+            $(function() {
+                testEditor = editormd("editormd", {
+                    width  : "90%",
+                    height : 720,
+                    path   : '../static/editor.md/lib/',
+                    {#markdown: md,#}
+                    codeFold: true,
+                    searchReplace: true,
+                    emoji: true,
+                    sequenceDiagram: true,
+                    taskList: true,
+                    tocm: true,
+                    {#tex: true,#}
+                    flowChart: true,
+                    imageUpload: true,
+                    imageFormats: ["jpg", "jpeg", "png", "bmp", "gif"],
+                });
+            });
+        </script>
+{% endblock %}
