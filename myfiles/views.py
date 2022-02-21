@@ -7,9 +7,7 @@ import json
 import random
 import logging
 import zipfile
-import hashlib
 import traceback
-import markdown
 from django.shortcuts import render
 from django.core import serializers
 from django.contrib import auth
@@ -543,8 +541,25 @@ def get_history(request):
             logging.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
+
 def md_view(request):
-    path = '3029/71645366508.md'.split('/')
+    file_id = request.GET.get('id')
+    file = Files.objects.get(id=file_id)
+    path = file.path.split('/')
     res = storage.download_bytes(path[0], path[-1])
     d = res.data.decode()
-    return render(request, 'extends.html', context={'content': d})
+    return render(request, 'editorMD.html', context={'content': d})
+
+
+def get_md_file_id(request):
+    if request.method == 'GET':
+        try:
+            file_id = request.GET.get('id')
+            file = Files.objects.get(id=file_id)
+            path = file.path.split('/')
+            data = storage.download_bytes(path[0], path[-1])
+            return result(msg=Msg.MsgGetFileSuccess, data={'data': data.data.decode(), 'name': file.name})
+        except Exception as err:
+            logging.error(f'Get file failure: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgGetFileFailure)

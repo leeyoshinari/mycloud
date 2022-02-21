@@ -24,6 +24,7 @@
 	right: 15%;
 }
 .logC a button {
+	cursor: pointer;
 	border-radius: 8px;
 	width: 100%;
 	height: 45px;

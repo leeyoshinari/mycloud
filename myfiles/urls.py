@@ -33,5 +33,6 @@ urlpatterns = [
     path('file/history', views.get_history, name='get_history'),
     path('open', views.open_share_file, name='open_share_file'),
 
-    path('md/view', views.md_view, name='md_view')
+    path('md/view', views.md_view, name='md_view'),
+    path('md/get', views.get_md_file_id, name='get_md')
 ]

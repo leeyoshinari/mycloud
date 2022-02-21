@@ -475,3 +475,32 @@ tr:hover td {
 	font-size: large;
 	color: #d9534f;
 }
+.iframe_div {
+	display: none;
+	border:2px solid #000;
+	margin-top: 3%;
+	margin-left: 5%;
+	width: 90%;
+	max-height: 88%;
+	background-color: white;
+	position: relative;
+	z-index: 999;
+}
+#iframe_id {
+	border: none;
+	height: 930px;
+	width: 100%;
+}
+.iframe_div #close_iframe {
+	margin-right: 1%;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.iframe_div #close_iframe:hover,
+.iframe_div #close_iframe:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}

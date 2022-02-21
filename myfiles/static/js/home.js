@@ -14,9 +14,11 @@ let all_icons = {
 let folder_window = '<div class="modal-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">新建文件夹</h2></div><div class="modal-body"><div><label>名称：</label><input id="folder_name" type="text" placeholder="请输入名称"></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>';
 let move_folder = '<div class="move-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">移动文件</h2></div><div class="modal-body"><div><label>移动到目录：</label><input id="folder_name" type="text" placeholder="请选择目标目录" value="/" name="520" readonly></div><div><label>选择目录：</label><div id="folder-tree"><ul class="domtree"><li onclick="get_folders(\'520\')">/</li><ul id="520"></ul></ul></div></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>'
 let table_head = '<th width="2%" style="text-align: center;"><input type="checkbox" id="checkout" onclick="checkout_box()"></th><th width="30%">名称</th><th width="10%">大小</th><th width="8%">格式</th><th width="15%">创建时间</th> <th width="15%">修改时间</th><th width="20">操作</th>';
-let image_video = 'jpg,jpeg,bmp,png,mp4,avi,flv,pdf';
-let image_flat = 'jpg,jpeg,bmp,png';
-let open_new_tab = 'pdf,mp4,avi,flv';
+let preview_format = 'jpg,jpeg,bmp,png,mp4,avi,flv,';     // 在当前页面预览，针对音视频
+let edit_online = 'txt,md';     // 需要在线编辑的文档
+let image_flat = 'jpg,jpeg,bmp,png';  // 图标平铺展示，只针对图片
+let open_new_tab_format = 'pdf';    // 在新标签页打开
+let previews = preview_format + open_new_tab_format;
 refresh_folder();
 function change_layout(results) {
     let layout = document.getElementById("layout").value;
@@ -341,8 +343,10 @@ function display_files(results) {
         }
         if (results[i]['model'] === "myfiles.files") {
             s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></td>';
-            if (image_video.indexOf(results[i]['fields']['format']) > -1) {
+            if (previews.indexOf(results[i]['fields']['format']) > -1) {
                 s = s + '<td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+            } else if (edit_online.indexOf(results[i]['fields']['format']) > -1) {
+                s = s + '<td onclick="show_file(\''+ results[i]['pk'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
             } else {
                 s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
             }
@@ -475,8 +479,10 @@ function search_file(page_num) {
                     }
                     if (results[i]['model'] === "myfiles.files") {
                         s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></td>';
-                        if (image_video.indexOf(results[i]['fields']['format']) > -1) {
+                        if (previews.indexOf(results[i]['fields']['format']) > -1) {
                             s = s + '<td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                        } else if (edit_online.indexOf(results[i]['fields']['format']) > -1) {
+                            s = s + '<td onclick="show_file(\''+ results[i]['pk'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                         } else {
                             s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                         }
@@ -711,8 +717,10 @@ function upload_file() {
 }
 
 function show_file(path, format) {
-    if (open_new_tab.indexOf(format) > -1) {
+    if (open_new_tab_format.indexOf(format) > -1) {
         window.open('getFile/' + path);
+    } else if (edit_online.indexOf(format) > -1) {
+        editor_online(path);
     } else {
         let modal = document.getElementById('myModal');
         modal.innerHTML = folder_window;
@@ -758,8 +766,10 @@ function get_garbage(page) {
                 let results = data['data']['data'];
                 for (let i=0; i<results.length; i++) {
                     s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></td>';
-                    if (image_video.indexOf(results[i]['fields']['format']) > -1) {
+                    if (previews.indexOf(results[i]['fields']['format']) > -1) {
                         s = s + '<td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                    } else if (edit_online.indexOf(results[i]['fields']['format']) > -1) {
+                        s = s + '<td onclick="show_file(\''+ results[i]['pk'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                     } else {
                         s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                     }
@@ -867,8 +877,10 @@ function get_share_file() {
                 let s = "";
                 let results = data['data'];
                 for (let i=0; i<results.length; i++) {
-                    if (results[i]['fields']['format'] === 'jpeg') {
+                    if (previews.indexOf(results[i]['fields']['format']) > -1) {
                         s = s + '<tr><td onclick="show_file(\''+ results[i]['fields']['path'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
+                    } else if (edit_online.indexOf(results[i]['fields']['format']) > -1) {
+                        s = s + '<td onclick="show_file(\''+ results[i]['fields']['file_id'] + '\',\'' + results[i]['fields']['format'] + '\')"><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                     } else {
                         s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                     }
@@ -916,4 +928,30 @@ function get_history(page) {
             }
         }
     })
+}
+
+function editor_online(file_id) {
+    open_md(file_id);
+    // $.ajax({
+    //     type: "GET",
+    //     url: "md/get?id=" + file_id,
+    //     success: function (data) {
+    //         if (data['code'] === 0) {
+    //             $.Toast(data['msg'], 'success');
+    //             // open_md(data['data']['data']);
+    //         } else {
+    //             $.Toast(data['msg'], 'error');
+    //             return;
+    //         }
+    //     }
+    // })
+}
+
+function open_md(file_id) {
+    document.getElementsByClassName("iframe_div")[0].style.display = 'block';
+    document.getElementById("iframe_id").src='md/view?id=' + file_id;
+    document.getElementById("close_iframe").onclick = function () {
+        document.getElementById("iframe_id").src='';
+        document.getElementsByClassName("iframe_div")[0].style.display = 'none';
+    }
 }

@@ -2,6 +2,8 @@
 {% load static %}
 {% block addcss %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{#    <link rel="stylesheet" href="{% static 'editor.md/css/style.css' %}" />#}
+{#    <link rel="stylesheet" href="{% static 'editor.md/css/editormd.css' %}" />#}
 {% endblock %}
 
 {% block addjs %}
@@ -135,6 +137,7 @@
     </div>
     <div id="myModal"></div>
     <div id="moving"></div>
+    <div class="iframe_div"><span id="close_iframe">&times;</span><iframe id="iframe_id" src=""></iframe></div>
     <div class="modal_cover">
         <div class="modal_gif"></div>
         <progress id="progressBar" value="0" max="100"></progress>
