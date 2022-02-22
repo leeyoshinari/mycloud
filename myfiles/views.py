@@ -37,6 +37,8 @@ def login(request):
             if session:
                 auth.login(request, session)
                 request.session.set_expiry(3600)
+                History.objects.create(file_id=-1, file_name=username, operate='login', ip=ip,
+                                       operate_time=time.strftime('%Y-%m-%d %H:%M:%S'))
                 return result(msg=Msg.MsgLonginSuccess)
             else:
                 return result(code=1, msg=Msg.MsgLonginFailure)
@@ -47,7 +49,11 @@ def login(request):
 
 
 def logout(request):
+    username = request.user.username
+    ip = request.headers.get('x-real-ip')
     auth.logout(request)
+    History.objects.create(file_id=-1, file_name=username, operate='logout', ip=ip,
+                           operate_time=time.strftime('%Y-%m-%d %H:%M:%S'))
     return render(request, 'login.html')
 
 
@@ -104,7 +110,7 @@ def upload_file(request):
             return result(code=2, msg=Msg.MsgFastUploadSuccess, data=file.name)
         except Files.DoesNotExist:
             data.seek(0)
-        random_i = int(time.time() % 100)
+        random_i = int(time.time() * 100) % 100
         bucket_name = str((500 + random_i * 5) ^ (2521 - random_i * 2))
         object_name = str(random.randint(1, 99)) + str(int(time.time())) + '.' + file_name.split('.')[-1]
         res = storage.upload_file_bytes(bucket_name, object_name, data, file_size, content_type=content_type)
@@ -544,11 +550,17 @@ def get_history(request):
 
 
 def md_view(request):
-    file_id = request.GET.get('id')
-    file = Files.objects.get(id=file_id)
-    path = file.path.split('/')
-    res = storage.download_bytes(path[0], path[-1])
-    return render(request, 'editorMD.html', context={'content': res.data.decode(), 'name': file.name})
+    if request.method == 'GET':
+        try:
+            file_id = request.GET.get('id')
+            file = Files.objects.get(id=file_id)
+            path = file.path.split('/')
+            res = storage.download_bytes(path[0], path[-1])
+            return render(request, 'editorMD.html', context={'content': res.data.decode(), 'name': file.name})
+        except Exception as err:
+            logging.error(f'Get md file failure: {err}')
+            logging.error(traceback.format_exc())
+            return render(request, '404.html')
 
 
 def get_md_file_id(request):

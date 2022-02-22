@@ -14,11 +14,12 @@ let all_icons = {
 let folder_window = '<div class="modal-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">新建文件夹</h2></div><div class="modal-body"><div><label>名称：</label><input id="folder_name" type="text" placeholder="请输入名称"></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>';
 let move_folder = '<div class="move-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">移动文件</h2></div><div class="modal-body"><div><label>移动到目录：</label><input id="folder_name" type="text" placeholder="请选择目标目录" value="/" name="520" readonly></div><div><label>选择目录：</label><div id="folder-tree"><ul class="domtree"><li onclick="get_folders(\'520\')">/</li><ul id="520"></ul></ul></div></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>'
 let table_head = '<th width="2%" style="text-align: center;"><input type="checkbox" id="checkout" onclick="checkout_box()"></th><th width="30%">名称</th><th width="10%">大小</th><th width="8%">格式</th><th width="15%">创建时间</th> <th width="15%">修改时间</th><th width="20">操作</th>';
-let preview_format = 'jpg,jpeg,bmp,png,mp4,avi,flv,';     // 在当前页面预览，针对音视频
+let video_format = 'mp4,avi,flv';
+let music_format = 'mp3';
 let edit_online = 'txt,md';     // 需要在线编辑的文档
-let image_flat = 'jpg,jpeg,bmp,png';  // 图标平铺展示，只针对图片
+let image_format = 'jpg,jpeg,bmp,png';  // 图标平铺展示，只针对图片
 let open_new_tab_format = 'pdf';    // 在新标签页打开
-let previews = preview_format + open_new_tab_format;
+let previews = video_format + image_format + music_format + open_new_tab_format;
 refresh_folder();
 function change_layout(results) {
     let layout = document.getElementById("layout").value;
@@ -371,7 +372,7 @@ function flat_img(results) {
         }
         if (results[i]['model'] === "myfiles.files") {
             let src = 'static/img/' + all_icons[results[i]['fields']['format']];
-            if (image_flat.indexOf(results[i]['fields']['format']) > -1) {
+            if (image_format.indexOf(results[i]['fields']['format']) > -1) {
                 src = 'getFile/' + results[i]['fields']['path'];
             }
             s = s + '<div class="div-img"><div><img src="' + src + '"></div><div class="checkoutbox"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></div>';
@@ -727,8 +728,13 @@ function show_file(path, format) {
         let modal_content = document.getElementsByClassName("modal-content")[0];
         modal_content.style.cssText = "background-color: transparent;";
         modal.style.display = "block";
-        modal_content.innerHTML = '<img src="getFile/' + path + '">';
-        // modal_content.innerHTML = '<video autoplay><source src="getFile/' + path + '" type="video/mp4"></video>';
+        if (image_format.indexOf(format) > -1) {
+            modal_content.innerHTML = '<img src="getFile/' + path + '">';
+        } else if (video_format.indexOf(format) > -1) {
+            modal_content.innerHTML = '<link href="static/css/video-js.min.css" rel="stylesheet"><script src="static/js/video.min.js"></script><video id="my_video" class="video-js" controls autoplay preload="none" data-setup="{}"><source src="getFile/' + path + '" type="video/mp4"></video>';
+        } else if (music_format.indexOf(format) > -1) {
+            modal_content.innerHTML = '<audio id="my_music" controls autoplay preload="none"><source src="getFile/' + path + '" type="audio/mpeg"></audio>';
+        }
 
         window.onclick = function (event) {
             if (event.target === modal) {
@@ -932,19 +938,6 @@ function get_history(page) {
 
 function editor_online(file_id) {
     open_md(file_id);
-    // $.ajax({
-    //     type: "GET",
-    //     url: "md/get?id=" + file_id,
-    //     success: function (data) {
-    //         if (data['code'] === 0) {
-    //             $.Toast(data['msg'], 'success');
-    //             // open_md(data['data']['data']);
-    //         } else {
-    //             $.Toast(data['msg'], 'error');
-    //             return;
-    //         }
-    //     }
-    // })
 }
 
 function open_md(file_id) {

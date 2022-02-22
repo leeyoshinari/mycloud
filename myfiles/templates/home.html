@@ -2,13 +2,9 @@
 {% load static %}
 {% block addcss %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
-{#    <link rel="stylesheet" href="{% static 'editor.md/css/style.css' %}" />#}
-{#    <link rel="stylesheet" href="{% static 'editor.md/css/editormd.css' %}" />#}
 {% endblock %}
 
 {% block addjs %}
-{#    <script src="{% static 'js/jquery.min.js' %}"></script>#}
-{#    <script src="{% static 'js/bootstrap.min.js' %}"></script>#}
 {% endblock %}
 
 {% block addbody %}
@@ -66,7 +62,7 @@
             <button onclick="get_garbage(1)">回收站</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/garbage.png' %}">
+            <img src="{% static 'img/imageres_86.ico' %}">
             <button onclick="get_history()">操作记录</button>
         </div>
         <div class="list-icon" style="display: none;">

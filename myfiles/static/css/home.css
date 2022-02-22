@@ -504,3 +504,9 @@ tr:hover td {
     text-decoration: none;
     cursor: pointer;
 }
+
+#my_video {
+	height: 640px;
+	width: 960px;
+}
+
