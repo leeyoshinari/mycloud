@@ -1,6 +1,4 @@
-let testEditor;
-$(function() {
-    testEditor = editormd("editormd", {
+let testEditor = editormd("editormd", {
         width  : "90%",
         height : 720,
         path   : '../static/editor.md/lib/',
@@ -18,4 +16,6 @@ $(function() {
         imageUpload: true,
         imageFormats: ["jpg", "jpeg", "png", "bmp", "gif"],
     });
-});
+testEditor.onload = function () {
+    console.log(testEditor.getMarkdown());
+}

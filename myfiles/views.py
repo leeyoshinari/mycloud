@@ -183,9 +183,10 @@ def rename_file(request):
             file_id = request.POST.get('id')
             file_name = request.POST.get('name')
             file = Files.objects.get(id=file_id)
-            if file.name == file_name:
+            file_list = file.name.split('.')
+            if file_name == file_list[0]:
                 return result(msg=Msg.MsgRenameSuccess)
-            file.name = file_name
+            file.name = f'{file_name}.{file_list[-1]}'
             file.update_time = time.strftime('%Y-%m-%d %H:%M:%S')
             file.save()
             return result(msg=Msg.MsgRenameSuccess)
@@ -547,8 +548,7 @@ def md_view(request):
     file = Files.objects.get(id=file_id)
     path = file.path.split('/')
     res = storage.download_bytes(path[0], path[-1])
-    d = res.data.decode()
-    return render(request, 'editorMD.html', context={'content': d})
+    return render(request, 'editorMD.html', context={'content': res.data.decode(), 'name': file.name})
 
 
 def get_md_file_id(request):
