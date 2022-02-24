@@ -812,7 +812,19 @@ function recovery_file(file_id) {
 }
 
 function download_file(file_id) {
-    window.open("file/download?id=" + file_id);
+    $.ajax({
+        type: "GET",
+        url: "file/download?id=" + file_id,
+        success: function (data) {
+            if (data['code'] === 0) {
+                $.Toast(data['msg'], 'success');
+                window.open("getFile/" + data['data']);
+            } else {
+                $.Toast(data['msg'], 'error');
+                return;
+            }
+        }
+    })
 }
 function export_folder(folder_id) {
     window.open("folder/export?id=" + folder_id);
@@ -904,7 +916,7 @@ function get_share_file() {
     })
 }
 function show_share_link(file_id) {
-    let share_url = window.location.href + 'open?id=' + file_id;
+    let share_url = window.location.href + 'open/' + file_id;
     confirm('分享链接为：' + share_url);
 }
 

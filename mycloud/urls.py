@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from common.config import get_config
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -22,5 +23,5 @@ urlpatterns = [
 ]
 
 urlpatterns = [
-    path('mycloud/', include(urlpatterns))
+    path(f'{get_config("context")}/', include(urlpatterns))
 ]

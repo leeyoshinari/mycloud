@@ -24,7 +24,7 @@ storage = MinIOStorage()
 formats = {'image': ['jpg', 'jpeg', 'bmp', 'png'], 'video': ['mp4', 'avi'], 'document': ['txt', 'md'],
            'docx': ['docx'], 'xlsx': ['xlsx'], 'pptx': ['pptx'], 'pdf': ['pdf'], 'music': ['mp3']}
 content_type = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': '', 'png': '', 'pdf': 'application/pdf',
-                'mp4': 'video/mp4', 'zip': 'application/zip'}
+                'mp4': 'video/mp4', 'zip': 'application/zip', 'mp3': 'audio/mpeg'}
 
 
 def login(request):
@@ -32,8 +32,17 @@ def login(request):
         if request.POST:
             username = request.POST.get('username')
             password = request.POST.get('password')
+            current_time = request.POST.get('currentTime')
+            p = ''
+            time_len = len(current_time)
+            for i in range(len(password)):
+                if i < time_len:
+                    p += chr(ord(password[i])^int(current_time[i]))
+                else:
+                    p += chr(ord(password[i]) ^ int(current_time[i-time_len]))
             ip = request.headers.get('x-real-ip')
-            session = auth.authenticate(username=username, password=password)
+            ip = ip if ip else '127.0.0.1'
+            session = auth.authenticate(username=username, password=p)
             if session:
                 auth.login(request, session)
                 request.session.set_expiry(3600)
@@ -51,6 +60,7 @@ def login(request):
 def logout(request):
     username = request.user.username
     ip = request.headers.get('x-real-ip')
+    ip = ip if ip else '127.0.0.1'
     auth.logout(request)
     History.objects.create(file_id=-1, file_name=username, operate='logout', ip=ip,
                            operate_time=time.strftime('%Y-%m-%d %H:%M:%S'))
@@ -136,11 +146,12 @@ def download_file(request):
         try:
             file_id = request.GET.get('id')
             file = Files.objects.get(id=file_id)
-            object_file = file.path.split('/')
-            response = StreamingHttpResponse(storage.download_bytes(object_file[0], object_file[-1]))
-            response['Content-Type'] = content_type[file.format]
-            response['Content-Disposition'] = f'attachment;filename="{file.name}"'
-            return response
+            return result(msg=Msg.MsgDownloadSuccess, data=file.path)
+            # object_file = file.path.split('/')
+            # response = StreamingHttpResponse(storage.download_bytes(object_file[0], object_file[-1]))
+            # response['Content-Type'] = content_type[file.format]
+            # response['Content-Disposition'] = f'attachment;filename="{file.name}"'
+            # return response
         except Exception as err:
             logging.error(f'Download file failure: {err}')
             logging.error(traceback.format_exc())
@@ -511,17 +522,18 @@ def get_share_file(request):
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
-def open_share_file(request):
+def open_share_file(request, share_id):
     if request.method == 'GET':
         try:
-            share_id = request.GET.get('id')
             host = request.headers.get('x-real-ip')
+            host = host if host else '127.0.0.1'
             share = Shares.objects.get(id=share_id)
             History.objects.create(file_id=share.file_id, file_name=share.name, operate='openShare',
                                    operate_time=time.strftime('%Y-%m-%d %H:%M:%S'), ip=host)
             if share.times < share.total_times:
                 path = share.path.split('/')
                 response = StreamingHttpResponse(storage.download_bytes(path[0], path[-1]))
+                response['Cache-Control'] = 'no-store'
                 response['Content-Type'] = content_type[share.format]
                 response['Content-Disposition'] = f'inline;filename="{share.name}"'
                 share.times = share.times + 1

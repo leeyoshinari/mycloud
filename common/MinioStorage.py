@@ -4,16 +4,16 @@
 import os
 import logging
 import traceback
-from django.conf import settings
 from minio import Minio
+from common.config import get_config
 
 
 class MinIOStorage:
     def __init__(self, host=None, access_key=None, secret_key=None):
         self.client = None
-        self.host = host if host else settings.MINIO_HOST
-        self.access_key = access_key if access_key else settings.MINIO_ACCESS_KEY
-        self.secret_key = secret_key if secret_key else settings.MINIO_SECRET_KEY
+        self.host = host if host else get_config('MinIOHost')
+        self.access_key = access_key if access_key else get_config('MinIOAccessKey')
+        self.secret_key = secret_key if secret_key else get_config('MinIOSecretKey')
 
         self.policy = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":' \
                       '["s3:GetBucketLocation","s3:ListBucketMultipartUploads"],"Resource":' \

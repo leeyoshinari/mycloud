@@ -1,5 +1,6 @@
 {% extends 'template.html' %}
 {% load static %}
+
 {% block addcss %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
 {% endblock %}
@@ -7,14 +8,12 @@
 {% block addbody %}
 <div class="wrap" id="wrap">
 	<div class="logGet">
-        <!-- 头部提示信息 -->
         <div class="lgT">
             <p class="p2">Personal Disk</p>
         </div>
         <div class="logD logDtip">
             <p class="p1">登 录</p>
         </div>
-        <!-- 输入框 -->
         <div class="lgD">
             <img src="{% static 'img/login_user.png' %}" width="20" height="20" alt=""/>
             <input type="text" placeholder="输入用户名" id="username">
@@ -27,41 +26,11 @@
             <a id="login_b" target="_self"><button>登 录</button></a>
         </div>
         <div class="logT">
-            <!--<a href="{ url 'user:sign' }">注册用户</a> -->
             <a onclick="window.alert('恭喜你忘记了密码 (^_^)');">忘记密码</a>
         </div>
     </div>
 </div>
-<script type="text/javascript">
-    $("#login_b").click(function () {
-        let username = document.getElementById('username').value;
-        let password = document.getElementById('password').value;
-        if (username === '' || password === ''){
-            $.Toast('用户名和密码不能为空！', 'error');
-            return;
-        }
-        let postdata = {
-            'username': username,
-            'password': password,
-        };
-        $(function login_b1 () {
-            $.ajax({
-                type: 'post',
-                url: "{% url 'myfiles:login' %}",
-                data: postdata,
-                datatype: 'json',
-                success: function (data) {
-                    console.log(data);
-                    if (data['code'] === 0) {
-                        $.Toast(data['msg'], 'success');
-                        window.location.href = "{% url 'myfiles:home' %}";
-                    }
-                    else {
-                        $.Toast(data['msg'], 'error');
-                    }
-                },
-            });
-        });
-    });
-</script>
+{% endblock %}
+{% block backjs %}
+    <script src="{% static 'js/login.js' %}"></script>
 {% endblock %}

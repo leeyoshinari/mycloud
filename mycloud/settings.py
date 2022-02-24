@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 from pathlib import Path
+from common.config import get_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-_3!j!sj()it*+)48c&ec9nb%)_f^g1jce_!#bos=z9qbhq+a@z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -75,12 +76,24 @@ WSGI_APPLICATION = 'mycloud.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if get_config('sqlType') == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': get_config('database'),
+            'USER': get_config('userName'),
+            'PASSWORD': get_config('password'),
+            'HOST': get_config('dbHost'),
+            'PORT': get_config('dbPort'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -117,8 +130,9 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = 'mycloud/static/'
+STATIC_URL = f"{get_config('context')}/static/"
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
@@ -157,7 +171,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',  # 保存到文件，自动切
             'filename': os.path.join(BASE_LOG_DIR, "mycloud.log"),  # 日志文件
             'maxBytes': 1024 * 1024 * 10,  # 日志大小 10M
-            'backupCount': 2,  # 最多备份几个
+            'backupCount': int(get_config('backupCount')),  # 最多备份几个
             'formatter': 'standard',
             'encoding': 'utf-8',
         },
@@ -165,17 +179,12 @@ LOGGING = {
     'loggers': {
        # 默认的logger应用如下配置
         'django': {
-            'handlers': ['console'],  # 上线之后可以把'console'移除
-            'level': 'INFO',
+            'handlers': ['default'],  # 上线之后可以把'console'移除
+            'level': get_config('level'),
             'propagate': True,  # 向不向更高级别的logger传递
         }
     },
 }
 
+# 不需要登陆校验的 url
 EXCLUDE_URL = 'admin|login|open'
-
-# Minio
-MINIO_HOST = '127.0.0.1:9000'
-MINIO_ACCESS_KEY = 'test'
-MINIO_SECRET_KEY='test123456'
-
