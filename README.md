@@ -12,6 +12,9 @@ python3 manage.py loaddata initdata.json
 ```shell script
 python3 manage.py createsuperuser
 ```
+```shell script
+python3 manage.py collectstatic
+```
 
 4、启动uwsgi
 ```

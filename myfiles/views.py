@@ -15,6 +15,7 @@ from django.core import serializers
 from django.contrib import auth
 from django.http import StreamingHttpResponse
 from django.db.models.deletion import ProtectedError
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from .models import Catalog, Files, History, Delete, Shares
 from common.Results import result
 from common.Messages import Msg

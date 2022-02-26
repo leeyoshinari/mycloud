@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block addbody %}
+    {% csrf_token %}
     <div class="container1">
         <img src="{% static 'img/favicon.ico' %}">
         <a href="{% url 'myfiles:logout' %}">退出云盘</a>
