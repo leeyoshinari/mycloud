@@ -11,6 +11,7 @@
         <div id="layout">
             <header>
                 <h1>{{ name }}</h1>
+                <input type="text" id="file_id" name="{{ name }}" value="{{ file_id }}" style="display:none;"/>
             </header>
             <div id="editormd"><textarea style="display:none;">{{ content|safe }}</textarea></div>
         </div>        

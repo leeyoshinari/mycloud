@@ -1,16 +1,17 @@
 // 修改表格行的背景色
 let all_icons = {
-    "folder": "imageres_3.ico",
+    "folder": "imageres_3.png",
     "docx": "docx.png",
     "xlsx": "excel.png",
     "pptx": "ppt.png",
-    "mp3": "imageres_1004.ico",
-    "mp4": "imageres_1005.ico",
-    "flv": "imageres_1005.ico",
-    "jpeg": "imageres_1003.ico",
-    "txt": "imageres_1002.ico",
+    "mp3": "imageres_1004.png",
+    "mp4": "imageres_1005.png",
+    "flv": "imageres_1005.png",
+    "jpeg": "imageres_1003.png",
+    "txt": "imageres_1002.png",
     "pdf": "pdf.png"
 };
+let operate_html = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="create_file(\'md\')">新建文件</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
 let folder_window = '<div class="modal-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">新建文件夹</h2></div><div class="modal-body"><div><label>名称：</label><input id="folder_name" type="text" placeholder="请输入名称"></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>';
 let move_folder = '<div class="move-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">移动文件</h2></div><div class="modal-body"><div><label>移动到目录：</label><input id="folder_name" type="text" placeholder="请选择目标目录" value="/" name="520" readonly></div><div><label>选择目录：</label><div id="folder-tree"><ul class="domtree"><li onclick="get_folders(\'520\')">/</li><ul id="520"></ul></ul></div></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>'
 let table_head = '<th width="2%" style="text-align: center;"><input type="checkbox" id="checkout" onclick="checkout_box()"></th><th width="30%">名称</th><th width="10%">大小</th><th width="8%">格式</th><th width="15%">创建时间</th> <th width="15%">修改时间</th><th width="20">操作</th>';
@@ -18,7 +19,7 @@ let video_format = 'mp4,avi,flv';
 let music_format = 'mp3';
 let edit_online = 'txt,md';     // 需要在线编辑的文档
 let image_format = 'jpg,jpeg,bmp,png';  // 图标平铺展示，只针对图片
-let open_new_tab_format = 'pdf';    // 在新标签页打开
+let open_new_tab_format = 'pdf,html';    // 在新标签页打开
 let previews = video_format + image_format + music_format + open_new_tab_format;
 refresh_folder();
 function change_layout(results) {
@@ -59,6 +60,33 @@ function textarea_mouseout(file_id, file_type) {
     } else {
         rename(file_name, file_id, 'file/rename');
     }
+}
+
+function create_file(file_format) {
+    let folder_id = document.getElementById("current_path").getAttribute("name");
+    if (!folder_id) {
+        folder_id = 520;
+    }
+    let post_data = {
+        format: file_format,
+        folder_id: folder_id
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "file/create",
+        data: post_data,
+        dataType: "json",
+        success: function (data) {
+            if (data['code'] === 0) {
+                $.Toast(data['msg'], 'success');
+                refresh_folder();
+            } else {
+                $.Toast(data['msg'], 'error');
+                return;
+            }
+        }
+    })
 }
 
 function create_folder() {
@@ -235,7 +263,7 @@ function get_root_folder() {
     // 重置查询文件格式
     document.getElementById("search").setAttribute("name", "");
 
-    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
+    document.getElementById("operation").innerHTML = operate_html;
     let sorted_type = document.getElementById("sort_type").value;
     let sorted = document.getElementById("sorted").value;
     get_files("520", sorted, sorted_type, 1, '', 'file/get');
@@ -309,7 +337,7 @@ function recent_file() {
     document.getElementById("current_path").setAttribute("value", "");
     // 重置查询文件格式
     document.getElementById("search").setAttribute("name", "");
-    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
+    document.getElementById("operation").innerHTML = operate_html;
     let page_size = 20;
     let layout = document.getElementById("layout").value;
     if (layout === '1') {page_size = 12;}
@@ -557,7 +585,7 @@ function files_format(file_format) {
     // 重置文件路径
     document.getElementById("current_path").setAttribute("value", "");
 
-    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
+    document.getElementById("operation").innerHTML = operate_html;
     refresh_folder();
 }
 
@@ -885,7 +913,7 @@ function share_file(file_id) {
 }
 
 function get_share_file() {
-    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
+    document.getElementById("operation").innerHTML = operate_html;
     $.ajax({
         type: "GET",
         url: "file/getShare",
@@ -921,7 +949,7 @@ function show_share_link(file_id) {
 }
 
 function get_history(page) {
-    document.getElementById("operation").innerHTML = '操作：<button onclick="upload_file()">上传</button><button onclick="op_selected(\'download\')">下载</button><button onclick="create_folder()">新建文件夹</button><button onclick="op_selected(\'move\')">移动</button><button onclick="op_selected(\'delete\')">删除</button>';
+    document.getElementById("operation").innerHTML = operate_html;
     document.getElementById("layout-img").innerHTML = "";
     if (!page) {page=1;}
     $.ajax({
@@ -954,9 +982,30 @@ function editor_online(file_id) {
 
 function open_md(file_id) {
     document.getElementsByClassName("iframe_div")[0].style.display = 'block';
-    document.getElementById("iframe_id").src='md/view?id=' + file_id;
+    document.getElementById("iframe_id").src = 'md/view?id=' + file_id;
     document.getElementById("close_iframe").onclick = function () {
-        document.getElementById("iframe_id").src='';
-        document.getElementsByClassName("iframe_div")[0].style.display = 'none';
+        let content = document.getElementById("iframe_id").contentWindow.document.getElementById("editormd").getElementsByTagName("textarea")[0].value;
+        let file_id = document.getElementById("iframe_id").contentWindow.document.getElementById("file_id").value;
+        let post_data = {
+            file_id: file_id,
+            base64: btoa(unescape(encodeURIComponent(content)))
+        }
+        $.ajax({
+            type: "POST",
+            url: "md/edit",
+            data: post_data,
+            dataType: "json",
+            success: function (data) {
+                if (data['code'] === 0) {
+                    $.Toast(data['msg'], 'success');
+                    refresh_folder();
+                } else {
+                    $.Toast(data['msg'], 'error');
+                    return;
+                }
+                document.getElementById("iframe_id").src = '';
+                document.getElementsByClassName("iframe_div")[0].style.display = 'none';
+            }
+        })
     }
 }

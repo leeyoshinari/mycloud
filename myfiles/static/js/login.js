@@ -1,4 +1,15 @@
+document.getElementById("wrap").onkeyup = function (event) {
+        if (event.keyCode === 13) {
+            login();
+        }
+};
+
 $("#login_b").click(function () {
+    login();
+});
+
+
+function login() {
     let username = document.getElementById('username').value;
     let p = document.getElementById('password').value;
     if (username === '' || p === '') {
@@ -35,4 +46,4 @@ $("#login_b").click(function () {
             }
         },
     });
-});
+}

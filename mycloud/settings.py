@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-_3!j!sj()it*+)48c&ec9nb%)_f^g1jce_!#bos=z9qbhq+a@z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'mycloud.mymiddleware.AccessAuthMiddleWare'
+    # 'mycloud.mymiddleware.AccessAuthMiddleWare'
 ]
 
 ROOT_URLCONF = 'mycloud.urls'
@@ -179,7 +179,7 @@ LOGGING = {
     'loggers': {
        # 默认的logger应用如下配置
         'django': {
-            'handlers': ['default'],  # 上线之后可以把'console'移除
+            'handlers': ['console'],  # 上线之后可以把'console'移除
             'level': get_config('level'),
             'propagate': True,  # 向不向更高级别的logger传递
         }

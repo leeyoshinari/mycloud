@@ -23,6 +23,7 @@ urlpatterns = [
     path('file/multiple/download', views.download_multiple_file, name='download_multiple_files'),
     path('file/get/recent', views.get_recent_files, name='get_recent_files'),
     path('file/search', views.search_file, name='search_file'),
+    path('file/create', views.create_file, name='create_file'),
     path('file/rename', views.rename_file, name='rename_file'),
     path('file/delete', views.delete_file, name='delete_file'),
     path('file/share', views.share_file, name='share_file'),
@@ -34,5 +35,6 @@ urlpatterns = [
     path('open/<int:share_id>', views.open_share_file, name='open_share_file'),
 
     path('md/view', views.md_view, name='md_view'),
-    path('md/get', views.get_md_file_id, name='get_md')
+    path('md/edit', views.edit_md, name="md_edit"),
+    # path('md/get', views.get_md_file_id, name='get_md')
 ]

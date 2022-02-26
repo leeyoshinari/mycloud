@@ -4,11 +4,13 @@
 import os
 import time
 import json
+import base64
 import random
 import logging
 import zipfile
 import traceback
-from django.shortcuts import render
+from io import BytesIO
+from django.shortcuts import render, redirect
 from django.core import serializers
 from django.contrib import auth
 from django.http import StreamingHttpResponse
@@ -23,7 +25,7 @@ from common.MinioStorage import MinIOStorage
 storage = MinIOStorage()
 formats = {'image': ['jpg', 'jpeg', 'bmp', 'png'], 'video': ['mp4', 'avi'], 'document': ['txt', 'md'],
            'docx': ['docx'], 'xlsx': ['xlsx'], 'pptx': ['pptx'], 'pdf': ['pdf'], 'music': ['mp3']}
-content_type = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': '', 'png': '', 'pdf': 'application/pdf',
+content_type = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': 'image/bmp', 'png': 'image/png', 'pdf': 'application/pdf',
                 'mp4': 'video/mp4', 'zip': 'application/zip', 'mp3': 'audio/mpeg'}
 
 
@@ -64,11 +66,45 @@ def logout(request):
     auth.logout(request)
     History.objects.create(file_id=-1, file_name=username, operate='logout', ip=ip,
                            operate_time=time.strftime('%Y-%m-%d %H:%M:%S'))
-    return render(request, 'login.html')
+    return redirect('myfiles:login')
 
 
 def home(request):
     return render(request, 'home.html')
+
+
+def create_file(request):
+    if request.method == 'POST':
+        try:
+            file_format = request.POST.get('format')
+            folder_id = request.POST.get('folder_id')
+            file_name = f'新建文件.{file_format}'
+            f = open(file_name, 'w', encoding='utf-8')
+            f.close()
+            random_i = int(time.time() * 100) % 100
+            bucket_name = str((500 + random_i * 5) ^ (2521 - random_i * 2))
+            object_name = str(random.randint(1, 99)) + str(int(time.time())) + '.md'
+            res = storage.upload_file_by_path(bucket_name, object_name, file_name)
+            os.remove(file_name)
+            if res:
+                try:
+                    file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
+                    current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+                    Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=file_format,
+                                                parent_id=folder_id, path=f'{bucket_name}/{res.object_name}',
+                                                size=0, md5=0, create_time=current_time, update_time=current_time)
+                    return result(msg=Msg.MsgUploadSuccess, data=file_name)
+                except Exception as err:
+                    logging.error(err)
+                    logging.error(traceback.format_exc())
+                    storage.delete_file(bucket_name, res.object_name)
+                    return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
+            else:
+                return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
+        except Exception as err:
+            logging.error(err)
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgUploadFailure)
 
 
 def create_folder(request):
@@ -534,7 +570,7 @@ def open_share_file(request, share_id):
                 path = share.path.split('/')
                 response = StreamingHttpResponse(storage.download_bytes(path[0], path[-1]))
                 response['Cache-Control'] = 'no-store'
-                response['Content-Type'] = content_type[share.format]
+                response['Content-Type'] = content_type.get(share.format, 'application/octet-stream')
                 response['Content-Disposition'] = f'inline;filename="{share.name}"'
                 share.times = share.times + 1
                 share.save()
@@ -568,7 +604,7 @@ def md_view(request):
             file = Files.objects.get(id=file_id)
             path = file.path.split('/')
             res = storage.download_bytes(path[0], path[-1])
-            return render(request, 'editorMD.html', context={'content': res.data.decode(), 'name': file.name})
+            return render(request, 'editorMD.html', context={'content': res.data.decode(), 'name': file.name, 'file_id': file_id})
         except Exception as err:
             logging.error(f'Get md file failure: {err}')
             logging.error(traceback.format_exc())
@@ -587,3 +623,24 @@ def get_md_file_id(request):
             logging.error(f'Get file failure: {err}')
             logging.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
+
+def edit_md(request):
+    if request.method == 'POST':
+        try:
+            file_id = request.POST.get('file_id')
+            content = request.POST.get('base64')
+            file = Files.objects.get(id=file_id)
+            path = file.path.split('/')
+            data = base64.b64decode(content)
+            res = storage.upload_file_bytes(path[0], path[-1], BytesIO(data), len(data))
+            if res:
+                file.md5 = res.etag
+                file.size = len(data)
+                file.update_time = time.strftime('%Y-%m-%d %H:%M:%S')
+                file.save()
+                return result(msg=Msg.MsgSaveSuccess)
+        except Exception as err:
+            logging.error(f'Edit md file failure: {err}')
+            logging.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgSaveFailure)
+

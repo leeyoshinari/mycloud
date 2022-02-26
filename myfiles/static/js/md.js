@@ -1,5 +1,5 @@
 let testEditor = editormd("editormd", {
-        width  : "90%",
+        width  : "95%",
         height : 720,
         path   : '../static/editor.md/lib/',
         toolbar_autofixed: true,
@@ -16,6 +16,38 @@ let testEditor = editormd("editormd", {
         imageUpload: true,
         imageFormats: ["jpg", "jpeg", "png", "bmp", "gif"],
     });
-testEditor.onload = function () {
-    console.log(testEditor.getMarkdown());
+
+let init_len = document.getElementById("editormd").getElementsByTagName("textarea")[0].value.length;
+window.setInterval(function () {
+            get_textarea_text();
+    }, 10000
+)
+
+function get_textarea_text() {
+        let editor = document.getElementById("editormd").getElementsByTagName("textarea")[0].value;
+        if (editor.length !== init_len) {
+                save();
+                init_len = editor.length;
+        }
+}
+
+function save() {
+        let content = document.getElementById("editormd").getElementsByTagName("textarea")[0].value;
+        let file_id = document.getElementById("file_id").value;
+        let post_data = {
+                file_id: file_id,
+                base64: btoa(unescape(encodeURIComponent(content)))
+        }
+        $.ajax({
+                type: "POST",
+                url: "edit",
+                data: post_data,
+                dataType: "json",
+                success: function (data) {
+                        if (data['code'] === 1) {
+                                $.Toast(data['msg'], 'error');
+                                return;
+                        }
+                }
+        })
 }

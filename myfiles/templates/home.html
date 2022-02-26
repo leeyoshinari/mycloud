@@ -18,11 +18,11 @@
             <button onclick="get_root_folder()">我的云盘</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1023.ico' %}">
+            <img src="{% static 'img/imageres_1023.png' %}">
             <button onclick="recent_file()">最新文件</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1002.ico' %}">
+            <img src="{% static 'img/imageres_1002.png' %}">
             <button onclick="files_format('document')">我的文档</button>
         </div>
         <div class="list-icon">
@@ -42,15 +42,15 @@
             <button onclick="files_format('pdf')">PDF文档</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1003.ico' %}">
+            <img src="{% static 'img/imageres_1003.png' %}">
             <button onclick="files_format('image')">图片</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1005.ico' %}">
+            <img src="{% static 'img/imageres_1005.png' %}">
             <button onclick="files_format('video')">视频</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_1004.ico' %}">
+            <img src="{% static 'img/imageres_1004.png' %}">
             <button onclick="files_format('music')">音乐</button>
         </div>
         <div class="list-icon">
@@ -62,11 +62,11 @@
             <button onclick="get_garbage(1)">回收站</button>
         </div>
         <div class="list-icon">
-            <img src="{% static 'img/imageres_86.ico' %}">
+            <img src="{% static 'img/imageres_86.png' %}">
             <button onclick="get_history()">操作记录</button>
         </div>
         <div class="list-icon" style="display: none;">
-            <img src="{% static 'img/imageres_3.ico' %}">
+            <img src="{% static 'img/imageres_3.png' %}">
             <button>其他</button>
         </div>
     </div>
@@ -114,6 +114,7 @@
                     <button onclick="upload_file()">上传</button>
                     <button onclick="op_selected('download')">下载</button>
                     <button onclick="create_folder()">新建文件夹</button>
+                    <button onclick="create_file('md')">新建文件</button>
                     <button onclick="op_selected('move')">移动</button>
                     <button onclick="op_selected('delete')">删除</button>
                 </label>
