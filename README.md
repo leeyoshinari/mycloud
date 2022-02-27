@@ -1,4 +1,6 @@
 # mycloud
+[详细介绍]()
+
 ## 功能
 - 文件夹的新建、删除、重命名、移动、导出<br>
 - 文件上传、下载、新建、删除、移动、重命名、分享<br>
@@ -14,16 +16,16 @@
 - 文件存储：MinIO<br>
 
 ## 系统架构
-![]()
+![](https://github.com/leeyoshinari/mycloud/blob/main/myfiles/static/img/architecture.png)
 
 ## 部署
-1、克隆 `git clone https://github.com/leeyoshinari/mycloud.git`;
+1、克隆 `git clone https://github.com/leeyoshinari/mycloud.git`；
 
 2、进入目录 `cd mycloud`，修改配置文件`config.conf`；
 
 3、部署MinIO。个人使用不建议按照官方文档部署，直接在网上查资料，一条命令就可以启动；
 
-4、初始化数据库，依次执行下面语句；
+4、初始化数据库，依次执行下面命令；
 ```shell script
 python3 manage.py migrate
 python3 manage.py makemigrations myfiles
@@ -81,8 +83,10 @@ location /mycloud/getFile/ {
 uwsgi uwsgi.ini
 ```
 
-11、访问，url是 `http://ip:port/上下文`
-![]()
+11、访问页面，url是 `http://ip:port/上下文`
+![](https://github.com/leeyoshinari/mycloud/blob/main/myfiles/static/img/page.PNG)
+
+12、访问权限控制页面，url是 `http://ip:port/上下文/admin`
 
 ## Requirements
 - Django>=4.0.1
