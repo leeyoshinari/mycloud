@@ -88,6 +88,8 @@ uwsgi uwsgi.ini
 
 12、访问权限控制页面，url是 `http://ip:port/上下文/admin`
 
+13、如果想把磁盘上已有的文件放入云盘，可通过调用接口 `file/uploadByPath?folderId=目录ID&path=文件路径` 实现将磁盘文件上传到云盘。
+
 ## Requirements
 - Django>=4.0.1
 - minio>=7.1.3

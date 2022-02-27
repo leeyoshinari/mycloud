@@ -19,6 +19,7 @@ urlpatterns = [
     path('folder/export', views.export_folder, name='move_folder'),
     path('file/get', views.get_all_files, name='get_all_files'),
     path('file/upload', views.upload_file, name='upload_file'),
+    path('file/uploadByPath', views.upload_file_by_path, name='upload_file_by_path'),
     path('file/download', views.download_file, name='download_file'),
     path('file/multiple/download', views.download_multiple_file, name='download_multiple_files'),
     path('file/get/recent', views.get_recent_files, name='get_recent_files'),

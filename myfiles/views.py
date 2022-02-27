@@ -19,7 +19,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from .models import Catalog, Files, History, Delete, Shares
 from common.Results import result
 from common.Messages import Msg
-from common.md5 import calc_md5
+from common.calc import calc_md5, calc_file_md5
 from common.MinioStorage import MinIOStorage
 
 
@@ -159,7 +159,7 @@ def upload_file(request):
             data.seek(0)
         random_i = int(time.time() * 100) % 100
         bucket_name = str((500 + random_i * 5) ^ (2521 - random_i * 2))
-        object_name = str(random.randint(1, 99)) + str(int(time.time())) + '.' + file_name.split('.')[-1]
+        object_name = str(random.randint(1, 99)) + str(int(time.time())) + os.path.splitext(file_name)[-1]
         res = storage.upload_file_bytes(bucket_name, object_name, data, file_size, content_type=content_type)
         if res:
             try:
@@ -176,6 +176,44 @@ def upload_file(request):
                 return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
         else:
             return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
+
+
+def upload_file_by_path(request):
+    if request.method == 'GET':
+        total_num = [0, 0, 0, 0]    # 分别是总数，成功数，失败数，已经存在的数
+        path = request.GET.get('path')
+        parent_id = request.GET.get('folderId')
+        folder_list = os.listdir(path)
+        file_list = [os.path.join(path, f) for f in folder_list if os.path.isfile(os.path.join(path, f))]
+        total_num[0] = len(file_list)
+        for file in file_list:
+            md5 = calc_file_md5(file)
+            try:
+                file = Files.objects.get(md5=md5)
+                total_num[3] += 1
+                continue
+            except Files.DoesNotExist:
+                pass
+            random_i = int(time.time() * 100) % 100
+            bucket_name = str((500 + random_i * 5) ^ (2521 - random_i * 2))
+            object_name = str(random.randint(1, 99)) + str(int(time.time())) + os.path.splitext(file)[-1]
+            res = storage.upload_file_by_path(bucket_name, object_name, file)
+            if res:
+                try:
+                    file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
+                    current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+                    Files.objects.create(id=file_id, name=os.path.basename(file), origin_name=os.path.basename(file), format=file.split('.')[-1],
+                                         parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
+                                         size=os.path.getsize(file), md5=md5, create_time=current_time, update_time=current_time)
+                    total_num[1] += 1
+                except Exception as err:
+                    logging.error(err)
+                    logging.error(traceback.format_exc())
+                    storage.delete_file(bucket_name, res.object_name)
+                    total_num[2] += 1
+            else:
+                total_num[2] += 1
+        return result(msg=f'共上传{total_num[0]}个文件，其中成功{total_num[1]}个，失败{total_num[2]}个，已经上传过{total_num[3]}个', data=total_num)
 
 
 def download_file(request):
@@ -273,6 +311,7 @@ def delete_file(request):
             file_id = request.POST.get('file_id')
             is_delete = request.POST.get('type')
             host = request.headers.get('x-real-ip')
+            host = host if host else '127.0.0.1'
             file_list = file_id.split(',')
             current_time = time.strftime('%Y-%m-%d %H:%M:%S')
             if is_delete == '0':

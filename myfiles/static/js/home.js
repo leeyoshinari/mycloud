@@ -379,7 +379,7 @@ function display_files(results) {
             } else {
                 s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
             }
-            s = s + '<td>' + (results[i]['fields']['size'] / 1024).toFixed(2) + ' KB</td>';
+            s = s + '<td>' + beauty_size(results[i]['fields']['size']) + '</td>';
             s = s + '<td>' + results[i]['fields']['format'] + '</td>';
             s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
             s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
@@ -515,7 +515,7 @@ function search_file(page_num) {
                         } else {
                             s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                         }
-                        s = s + '<td>' + (results[i]['fields']['size'] / 1024).toFixed(2) + ' KB</td>';
+                        s = s + '<td>' + beauty_size(results[i]['fields']['size']) + '</td>';
                         s = s + '<td>' + results[i]['fields']['format'] + '</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
@@ -807,7 +807,7 @@ function get_garbage(page) {
                     } else {
                         s = s + '<td><img src="static/img/' + all_icons[results[i]['fields']['format']] + '">' + results[i]['fields']['name'] + '</td>';
                     }
-                    s = s + '<td>' + (results[i]['fields']['size'] / 1024).toFixed(2) + ' KB</td>';
+                    s = s + '<td>' + beauty_size(results[i]['fields']['size']) + '</td>';
                     s = s + '<td>' + results[i]['fields']['format'] + '</td>';
                     s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                     s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
@@ -1007,5 +1007,19 @@ function open_md(file_id) {
                 document.getElementsByClassName("iframe_div")[0].style.display = 'none';
             }
         })
+    }
+}
+
+function beauty_size(size) {
+    size = size / 1024;
+    if (size < 1000) {
+        return size.toFixed(2) + ' KB';
+    } else {
+        size = size / 1024;
+    }
+    if (size < 1000) {
+        return size.toFixed(2) + ' MB';
+    } else {
+        return (size / 1024).toFixed(2) + ' GB';
     }
 }
