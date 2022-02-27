@@ -5,9 +5,14 @@ let all_icons = {
     "xlsx": "excel.png",
     "pptx": "ppt.png",
     "mp3": "imageres_1004.png",
+    "wav": "imageres_1004.png",
     "mp4": "imageres_1005.png",
     "flv": "imageres_1005.png",
     "jpeg": "imageres_1003.png",
+    "jpg": "imageres_1003.png",
+    "gif": "imageres_1003.png",
+    "png": "imageres_1003.png",
+    "bmp": "imageres_1003.png",
     "txt": "imageres_1002.png",
     "pdf": "pdf.png"
 };
@@ -16,9 +21,9 @@ let folder_window = '<div class="modal-content"><div class="modal-header"><span 
 let move_folder = '<div class="move-content"><div class="modal-header"><span class="close">&times;</span><h2 id="title-name">移动文件</h2></div><div class="modal-body"><div><label>移动到目录：</label><input id="folder_name" type="text" placeholder="请选择目标目录" value="/" name="520" readonly></div><div><label>选择目录：</label><div id="folder-tree"><ul class="domtree"><li onclick="get_folders(\'520\')">/</li><ul id="520"></ul></ul></div></div></div><div class="modal-footer"><a class="cancel">取消</a><a class="submit">确定</a></div></div>'
 let table_head = '<th width="2%" style="text-align: center;"><input type="checkbox" id="checkout" onclick="checkout_box()"></th><th width="30%">名称</th><th width="10%">大小</th><th width="8%">格式</th><th width="15%">创建时间</th> <th width="15%">修改时间</th><th width="20">操作</th>';
 let video_format = 'mp4,avi,flv';
-let music_format = 'mp3';
+let music_format = 'mp3,wav';
 let edit_online = 'txt,md';     // 需要在线编辑的文档
-let image_format = 'jpg,jpeg,bmp,png';  // 图标平铺展示，只针对图片
+let image_format = 'jpg,jpeg,bmp,png,gif';  // 图标平铺展示，只针对图片
 let open_new_tab_format = 'pdf,html';    // 在新标签页打开
 let previews = video_format + image_format + music_format + open_new_tab_format;
 refresh_folder();
@@ -368,7 +373,7 @@ function display_files(results) {
             s = s + '<td onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="static/img/' + all_icons['folder'] + '">' + results[i]['fields']['name'] + '</td><td></td><td>文件夹</td>';
             s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
             s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-            s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="export_folder(\'' + results[i]['pk'] + '\')">导出</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'folder\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
+            s = s + '<td style="white-space: normal;"><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="export_folder(\'' + results[i]['pk'] + '\')">导出</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'folder\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button></td></tr>';
         }
         if (results[i]['model'] === "myfiles.files") {
             s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></td>';
@@ -383,7 +388,7 @@ function display_files(results) {
             s = s + '<td>' + results[i]['fields']['format'] + '</td>';
             s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
             s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-            s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="download_file(\'' + results[i]['pk'] + '\')">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="share_file(\'' + results[i]['pk'] + '\')">分享</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 0)">删除</button></td></tr>';
+            s = s + '<td style="white-space: normal;"><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="download_file(\'' + results[i]['pk'] + '\')">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="share_file(\'' + results[i]['pk'] + '\')">分享</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 0)">删除</button></td></tr>';
         }
     }
     document.getElementById("tbody").innerHTML = s;
@@ -504,7 +509,7 @@ function search_file(page_num) {
                         s = s + '<td onclick="click_folder(\'' + results[i]['pk'] + '\',\'' + results[i]['fields']['name'] + '\')"><img src="static/img/' + all_icons['folder'] + '">' + results[i]['fields']['name'] + '</td><td></td><td>文件夹</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-                        s = s + '<td><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['pk'] + '\')">文件位置</button></td></tr>';
+                        s = s + '<td style="white-space: normal;"><button class="actions" onclick="rename_folder(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_folder(\'' + results[i]['pk'] + '\')">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['pk'] + '\')">文件位置</button></td></tr>';
                     }
                     if (results[i]['model'] === "myfiles.files") {
                         s = s + '<tr><td style="text-align: center;"><input type="checkbox" name="selected_file" value="'+ results[i]['pk'] +'"></td>';
@@ -519,7 +524,7 @@ function search_file(page_num) {
                         s = s + '<td>' + results[i]['fields']['format'] + '</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-                        s = s + '<td><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 0)">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['fields']['parent'] + '\')">文件位置</button></td></tr>';
+                        s = s + '<td style="white-space: normal;"><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 0)">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['fields']['parent'] + '\')">文件位置</button></td></tr>';
                     }
                 }
                 document.getElementById("tbody").innerHTML = s;
@@ -724,7 +729,7 @@ function upload_file() {
                         }
                         if (failure_num > 0) {
                             if (msg.length > 0) {msg += '，';}
-                            msg += failure_num + '个文件上传成功';
+                            msg += failure_num + '个文件上传失败';
                             level = "error";
                         }
                         $.Toast(msg, level);
@@ -933,7 +938,7 @@ function get_share_file() {
                     s = s + '<td>' + results[i]['fields']['times'] + '</td>';
                     s = s + '<td>' + results[i]['fields']['total_times'] + '</td>';
                     s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
-                    s = s + '<td><button class="actions" onclick="show_share_link(\'' + results[i]['pk'] + '\')">查看分享链接</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 6)">删除</button></td></tr>';
+                    s = s + '<td style="white-space: normal;"><button class="actions" onclick="show_share_link(\'' + results[i]['pk'] + '\')">查看分享链接</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 6)">删除</button></td></tr>';
                 }
                 document.getElementById("tbody").innerHTML = s;
                 PagingManage($('#paging'), 1, 1, 'abc')
