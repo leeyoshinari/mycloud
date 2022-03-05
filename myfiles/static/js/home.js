@@ -992,7 +992,7 @@ function open_md(file_id) {
         let content = document.getElementById("iframe_id").contentWindow.document.getElementById("editormd").getElementsByTagName("textarea")[0].value;
         let file_id = document.getElementById("iframe_id").contentWindow.document.getElementById("file_id").value;
         let content_len = document.getElementById("iframe_id").contentWindow.document.getElementById("file_id").name;
-        if (content_len === content.length) {
+        if (parseInt(content_len) === content.length) {
             return;
         }
         let post_data = {
