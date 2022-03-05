@@ -1,5 +1,5 @@
 # mycloud
-[详细介绍]()
+[详细介绍](https://mp.weixin.qq.com/s?__biz=Mzg5OTA3NDk2MQ==&mid=2247483877&idx=1&sn=cf0785afcc60b383fc158bdfd08242ad&chksm=c0599f1bf72e160da7e653267b1aaef3ff5c156cdc2f10ae26a8c9b069a640aba5428d73115b&token=581679580&lang=zh_CN#rd)
 
 ## 功能
 - 文件夹的新建、删除、重命名、移动、导出<br>

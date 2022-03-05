@@ -991,6 +991,10 @@ function open_md(file_id) {
     document.getElementById("close_iframe").onclick = function () {
         let content = document.getElementById("iframe_id").contentWindow.document.getElementById("editormd").getElementsByTagName("textarea")[0].value;
         let file_id = document.getElementById("iframe_id").contentWindow.document.getElementById("file_id").value;
+        let content_len = document.getElementById("iframe_id").contentWindow.document.getElementById("file_id").name;
+        if (content_len === content.length) {
+            return;
+        }
         let post_data = {
             file_id: file_id,
             base64: btoa(unescape(encodeURIComponent(content)))

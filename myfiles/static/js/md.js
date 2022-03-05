@@ -18,6 +18,7 @@ let testEditor = editormd("editormd", {
     });
 
 let init_len = document.getElementById("editormd").getElementsByTagName("textarea")[0].value.length;
+document.getElementById("file_id").name = init_len;
 window.setInterval(function () {
             get_textarea_text();
     }, 10000
@@ -28,6 +29,7 @@ function get_textarea_text() {
         if (editor.length !== init_len) {
                 save();
                 init_len = editor.length;
+                document.getElementById("file_id").name = init_len;
         }
 }
 
