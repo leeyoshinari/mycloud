@@ -845,19 +845,20 @@ function recovery_file(file_id) {
 }
 
 function download_file(file_id) {
-    $.ajax({
-        type: "GET",
-        url: "file/download?id=" + file_id,
-        success: function (data) {
-            if (data['code'] === 0) {
-                $.Toast(data['msg'], 'success');
-                window.open("getFile/" + data['data']);
-            } else {
-                $.Toast(data['msg'], 'error');
-                return;
-            }
-        }
-    })
+    window.open("file/download?id=" + file_id);
+    // $.ajax({
+    //     type: "GET",
+    //     url: "file/download?id=" + file_id,
+    //     success: function (data) {
+    //         if (data['code'] === 0) {
+    //             $.Toast(data['msg'], 'success');
+    //             window.open("getFile/" + data['data']);
+    //         } else {
+    //             $.Toast(data['msg'], 'error');
+    //             return;
+    //         }
+    //     }
+    // })
 }
 function export_folder(folder_id) {
     window.open("folder/export?id=" + folder_id);
