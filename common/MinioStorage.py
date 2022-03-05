@@ -46,9 +46,9 @@ class MinIOStorage:
             logging.error(traceback.format_exc())
             return f'{bucket_name} 创建失败'
 
-    def upload_file_by_path(self, bucket_name: str, object_name: str, file_path: str):
+    def upload_file_by_path(self, bucket_name: str, object_name: str, file_path: str, content_type=None):
         try:
-            res = self.client.fput_object(bucket_name, object_name, file_path)
+            res = self.client.fput_object(bucket_name, object_name, file_path, content_type)
             return res
         except Exception as err:
             logging.error(err)

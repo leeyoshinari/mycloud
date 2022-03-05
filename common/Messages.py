@@ -5,6 +5,7 @@
 class Msg(object):
     MsgParamError = '参数错误'
     MsgLonginSuccess = '登陆成功'
+    MsgLongoutSuccess = '退出成功'
     MsgLonginFailure = '用户名或密码错误'
     MsgGetFileSuccess = '查询成功'
     MsgGetFileFailure = '查询失败'
