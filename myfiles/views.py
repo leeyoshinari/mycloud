@@ -22,6 +22,7 @@ from common.calc import calc_md5, calc_file_md5
 from common.MinioStorage import MinIOStorage
 
 
+logger = logging.getLogger('django')
 storage = MinIOStorage()
 formats = {'image': ['jpg', 'jpeg', 'bmp', 'png'], 'video': ['mp4', 'avi'], 'document': ['txt', 'md'],
            'docx': ['docx'], 'xlsx': ['xlsx'], 'pptx': ['pptx'], 'pdf': ['pdf'], 'music': ['mp3']}
@@ -50,10 +51,10 @@ def login(request):
                 request.session.set_expiry(3600)
                 History.objects.create(file_id=-1, file_name=username, operate='login', ip=ip,
                                        operate_time=time.strftime('%Y-%m-%d %H:%M:%S'))
-                logging.info(f'{username} {Msg.MsgLonginSuccess}')
+                logger.info(f'{username} {Msg.MsgLonginSuccess}')
                 return result(msg=Msg.MsgLonginSuccess)
             else:
-                logging.error(f'{username} {Msg.MsgLonginFailure}')
+                logger.error(f'{username} {Msg.MsgLonginFailure}')
                 return result(code=1, msg=Msg.MsgLonginFailure)
         else:
             return result(code=1, msg=Msg.MsgParamError)
@@ -68,7 +69,7 @@ def logout(request):
     auth.logout(request)
     History.objects.create(file_id=-1, file_name=username, operate='logout', ip=ip,
                            operate_time=time.strftime('%Y-%m-%d %H:%M:%S'))
-    logging.info(f'{username} {Msg.MsgLongoutSuccess}')
+    logger.info(f'{username} {Msg.MsgLongoutSuccess}')
     return redirect('myfiles:login')
 
 
@@ -96,20 +97,20 @@ def create_file(request):
                     Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=file_format,
                                                 parent_id=folder_id, path=f'{bucket_name}/{res.object_name}',
                                                 size=0, md5=0, create_time=current_time, update_time=current_time)
-                    logging.info(f'{file_name} {Msg.MsgUploadSuccess}')
+                    logger.info(f'{file_name} {Msg.MsgUploadSuccess}')
                     return result(msg=Msg.MsgUploadSuccess, data=file_name)
                 except Exception as err:
-                    logging.error(err)
-                    logging.error(traceback.format_exc())
+                    logger.error(err)
+                    logger.error(traceback.format_exc())
                     storage.delete_file(bucket_name, res.object_name)
-                    logging.error(f'{file_name} {Msg.MsgUploadFailure}')
+                    logger.error(f'{file_name} {Msg.MsgUploadFailure}')
                     return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
             else:
-                logging.error(f'{file_name} {Msg.MsgUploadFailure}')
+                logger.error(f'{file_name} {Msg.MsgUploadFailure}')
                 return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
         except Exception as err:
-            logging.error(err)
-            logging.error(traceback.format_exc())
+            logger.error(err)
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgUploadFailure)
 
 
@@ -122,11 +123,11 @@ def create_folder(request):
             current_time = time.strftime('%Y-%m-%d %H:%M:%S')
             folder = Catalog.objects.create(id=file_id, parent_id=parent_id, name=file_name,
                                             create_time=current_time, update_time=current_time)
-            logging.info(f'Create Folder success, Folder-id-name: {folder.id},{folder.name}')
+            logger.info(f'Create Folder success, Folder-id-name: {folder.id},{folder.name}')
             return result(msg=Msg.MsgCreateSuccess.format(folder.name))
         except Exception as err:
-            logging.error(f'Create Folder failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Create Folder failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgCreateFailure)
 
 
@@ -141,11 +142,11 @@ def rename_folder(request):
             folder.name = folder_name
             folder.update_time = time.strftime('%Y-%m-%d %H:%M:%S')
             folder.save()
-            logging.info(f'{folder_name} {Msg.MsgRenameSuccess}')
+            logger.info(f'{folder_name} {Msg.MsgRenameSuccess}')
             return result(msg=Msg.MsgRenameSuccess)
         except Exception as err:
-            logging.error(f'Rename folder failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Rename folder failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgRenameFailure)
 
 
@@ -160,7 +161,7 @@ def upload_file(request):
         md5 = calc_md5(data)
         try:
             file = Files.objects.get(md5=md5)
-            logging.info(f'{file_name} {Msg.MsgFastUploadSuccess}')
+            logger.info(f'{file_name} {Msg.MsgFastUploadSuccess}')
             return result(code=2, msg=Msg.MsgFastUploadSuccess, data=file.name)
         except Files.DoesNotExist:
             data.seek(0)
@@ -175,16 +176,16 @@ def upload_file(request):
                 Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=file_name.split('.')[-1],
                                             parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
                                             size=file_size, md5=md5, create_time=current_time, update_time=current_time)
-                logging.info(f'{file_name} {Msg.MsgUploadSuccess}')
+                logger.info(f'{file_name} {Msg.MsgUploadSuccess}')
                 return result(msg=Msg.MsgUploadSuccess, data=file_name)
             except Exception as err:
-                logging.error(err)
-                logging.error(traceback.format_exc())
+                logger.error(err)
+                logger.error(traceback.format_exc())
                 storage.delete_file(bucket_name, res.object_name)
-                logging.error(f'{file_name} {Msg.MsgUploadFailure}')
+                logger.error(f'{file_name} {Msg.MsgUploadFailure}')
                 return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
         else:
-            logging.error(f'{file_name} {Msg.MsgUploadFailure}')
+            logger.error(f'{file_name} {Msg.MsgUploadFailure}')
             return result(code=1, msg=Msg.MsgUploadFailure, data=file_name)
 
 
@@ -201,7 +202,7 @@ def upload_file_by_path(request):
             try:
                 file = Files.objects.get(md5=md5)
                 total_num[3] += 1
-                logging.info(f'{file} {Msg.MsgFastUploadSuccess}')
+                logger.info(f'{file} {Msg.MsgFastUploadSuccess}')
                 continue
             except Files.DoesNotExist:
                 pass
@@ -217,17 +218,17 @@ def upload_file_by_path(request):
                                          parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
                                          size=os.path.getsize(file), md5=md5, create_time=current_time, update_time=current_time)
                     total_num[1] += 1
-                    logging.info(f'{file} {Msg.MsgUploadSuccess}')
+                    logger.info(f'{file} {Msg.MsgUploadSuccess}')
                 except Exception as err:
-                    logging.error(err)
-                    logging.error(traceback.format_exc())
+                    logger.error(err)
+                    logger.error(traceback.format_exc())
                     storage.delete_file(bucket_name, res.object_name)
                     total_num[2] += 1
-                    logging.error(f'{file} {Msg.MsgUploadFailure}')
+                    logger.error(f'{file} {Msg.MsgUploadFailure}')
             else:
                 total_num[2] += 1
-                logging.error(f'{file} {Msg.MsgUploadFailure}')
-        logging.info(f'{path} {Msg.MsgUploadSuccess}，上传结果: {total_num}')
+                logger.error(f'{file} {Msg.MsgUploadFailure}')
+        logger.info(f'{path} {Msg.MsgUploadSuccess}，上传结果: {total_num}')
         return result(msg=f'共上传{total_num[0]}个文件，其中成功{total_num[1]}个，失败{total_num[2]}个，已经上传过{total_num[3]}个', data=total_num)
 
 
@@ -238,13 +239,13 @@ def download_file(request):
             file = Files.objects.get(id=file_id)
             object_file = file.path.split('/')
             response = StreamingHttpResponse(storage.download_bytes(object_file[0], object_file[-1]))
-            response['Content-Type'] = content_type[file.format]
-            response['Content-Disposition'] = f'attachment;filename="{file.name}"'
-            logging.info(f'{file.name} {Msg.MsgDownloadSuccess}')
+            response['Content-Type'] = content_type.get(file.format, 'application/octet-stream')
+            response['Content-Disposition'] = f'attachment;filename="{file.name}"'.encode('utf-8')
+            logger.info(f'{file.name} {Msg.MsgDownloadSuccess}')
             return response
         except Exception as err:
-            logging.error(f'Download file failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Download file failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgDownloadFailure, data=file_id)
 
 
@@ -258,11 +259,11 @@ def download_multiple_file(request):
             response = StreamingHttpResponse(open('temp/temp.zip', 'rb'))
             response['Content-Type'] = 'application/zip'
             response['Content-Disposition'] = 'attachment;filename="download.zip"'
-            logging.info(f'download.zip {Msg.MsgDownloadSuccess}')
+            logger.info(f'download.zip {Msg.MsgDownloadSuccess}')
             return response
         except Exception as err:
-            logging.error(f'Download multiple files failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Download multiple files failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgDownloadFailure)
 
 
@@ -277,12 +278,12 @@ def export_folder(request):
             zip_multiple_file(files)
             response = StreamingHttpResponse(open('temp/temp.zip', 'rb'))
             response['Content-Type'] = 'application/zip'
-            response['Content-Disposition'] = f'attachment;filename="{folder_name}.zip"'
-            logging.info(f'{folder_name}.zip {Msg.MsgDownloadSuccess}')
+            response['Content-Disposition'] = f'attachment;filename="{folder_name}.zip"'.encode('utf-8')
+            logger.info(f'{folder_name}.zip {Msg.MsgDownloadSuccess}')
             return response
         except Exception as err:
-            logging.error(f'Export folder failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Export folder failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgDownloadFailure)
 
 
@@ -298,11 +299,11 @@ def rename_file(request):
             file.name = f'{file_name}.{file_list[-1]}'
             file.update_time = time.strftime('%Y-%m-%d %H:%M:%S')
             file.save()
-            logging.info(f'{file_name} {Msg.MsgRenameSuccess}')
+            logger.info(f'{file_name} {Msg.MsgRenameSuccess}')
             return result(msg=Msg.MsgRenameSuccess)
         except Exception as err:
-            logging.error(f'Rename folder failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Rename folder failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgRenameFailure)
 
 
@@ -312,14 +313,14 @@ def delete_folder(request):
             folder_id = request.GET.get('id')
             Catalog.objects.get(id=folder_id).delete()
             Catalog.objects.filter(parent_id=folder_id).delete()
-            logging.info(f'Delete Folder success, Folder-id: {folder_id}')
+            logger.info(f'Delete Folder success, Folder-id: {folder_id}')
             return result(msg=Msg.MsgDeleteSuccess)
         except ProtectedError as err:
-            logging.error(f'Delete Folder failure: {err}')
+            logger.error(f'Delete Folder failure: {err}')
             return result(code=2, msg=Msg.MsgProtectedError)
         except Exception as err:
-            logging.error(f'Delete Folder failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Delete Folder failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgDeleteFailure)
 
 
@@ -355,11 +356,11 @@ def delete_file(request):
                     file.delete()
             if is_delete == '6':
                 Shares.objects.get(id=file_id).delete()
-            logging.info(f'Delete Folder success, File-id: {file_id}')
+            logger.info(f'Delete Folder success, File-id: {file_id}')
             return result(msg=Msg.MsgDeleteSuccess)
         except Exception as err:
-            logging.error(f'Delete Folder failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Delete Folder failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgDeleteFailure)
 
 
@@ -369,11 +370,11 @@ def get_recent_files(request):
             page_size = request.GET.get('page')
             page_size = int(page_size) if page_size else 20
             recent_file = Files.objects.filter().order_by('-update_time')[0: page_size]
-            logging.info(f'Get recent files {Msg.MsgGetFileSuccess}')
+            logger.info(f'Get recent files {Msg.MsgGetFileSuccess}')
             return result(data=json.loads(serializers.serialize('json', recent_file)), msg=Msg.MsgGetFileSuccess)
         except Exception as err:
-            logging.error(f'Get recent files failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Get recent files failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -412,11 +413,11 @@ def get_all_files(request):
                 files = Files.objects.filter(parent_id=folder_id).order_by(order_type)[(page_num - 1 - offset_page) * page_size - offset_num: (page_num - offset_page) * page_size - offset_num]
                 all_files = json.loads(serializers.serialize('json', files))
 
-            logging.info(f'Get files {Msg.MsgGetFileSuccess}')
+            logger.info(f'Get files {Msg.MsgGetFileSuccess}')
             return result(data={'data': all_files, 'total_page': (folder_count + file_count) // page_size + 1, 'page': page_num}, msg=Msg.MsgGetFileSuccess)
         except Exception as err:
-            logging.error(f'Get files error: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Get files error: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -448,11 +449,11 @@ def search_file(request):
                 files = Files.objects.filter(name__contains=key_word).order_by('-update_time')[(page_num - 1 - offset_page) * page_size - offset_num: (page_num - offset_page) * page_size - offset_num]
                 all_files = json.loads(serializers.serialize('json', files))
 
-            logging.info(f'Search files {Msg.MsgGetFileSuccess}')
+            logger.info(f'Search files {Msg.MsgGetFileSuccess}')
             return result(data={'data': all_files, 'total_page': (folder_count + file_count) // page_size + 1, 'page': page_num}, msg=Msg.MsgGetFileSuccess)
         except Exception as err:
-            logging.error(f'Search file failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Search file failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -471,11 +472,11 @@ def find_origin_path(request):
                 all_path.append(folder.name)
                 parent_id = folder.parent_id
             all_path.reverse()
-            logging.info(f'Find origin path, {folder_id}, {Msg.MsgGetFileSuccess}')
+            logger.info(f'Find origin path, {folder_id}, {Msg.MsgGetFileSuccess}')
             return result(msg=Msg.MsgGetFileSuccess, data=' > '.join(all_path))
         except Exception as err:
-            logging.error(f'Find origin path failure: {folder_id}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Find origin path failure: {folder_id}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -491,11 +492,11 @@ def return_last_path(request):
                 folder_list = folder_name.split(' > ')
                 folder_list.pop(-1)
                 folder_name = ' > '.join(folder_list)
-            logging.info(f'Return last path, {folder_id} - {folder_name}, {Msg.MsgOperateSuccess}')
+            logger.info(f'Return last path, {folder_id} - {folder_name}, {Msg.MsgOperateSuccess}')
             return result(msg=Msg.MsgOperateSuccess, data={'id': parent_id, 'name': folder_name})
         except Exception as err:
-            logging.error(f'Return last path failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Return last path failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgOperateFailure)
 
 
@@ -513,11 +514,11 @@ def get_file_by_format(request):
             file_count = Files.objects.filter(format__in=formats[file_format]).count()
             files = Files.objects.filter(format__in=formats[file_format]).order_by(order_type)[(page_num - 1) * page_size: page_num * page_size]
             all_files = json.loads(serializers.serialize('json', files))
-            logging.info(f'Find files of format {file_format}, {Msg.MsgGetFileSuccess}')
+            logger.info(f'Find files of format {file_format}, {Msg.MsgGetFileSuccess}')
             return result(data={'data': all_files, 'total_page': file_count // page_size + 1, 'page': page_num}, msg=Msg.MsgGetFileSuccess)
         except Exception as err:
-            logging.error(f'Find files of format "{file_format}" failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Find files of format "{file_format}" failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -526,11 +527,11 @@ def get_folders_by_id(request):
         try:
             folder_id = request.GET.get('id')
             folders = Catalog.objects.filter(parent_id=folder_id)
-            logging.info(f'Find folders by id-{folder_id}, {Msg.MsgGetFileSuccess}')
+            logger.info(f'Find folders by id-{folder_id}, {Msg.MsgGetFileSuccess}')
             return result(data=json.loads(serializers.serialize('json', folders)), msg=Msg.MsgGetFileSuccess)
         except Exception as err:
-            logging.error(f'Find folders by id-{folder_id} failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Find folders by id-{folder_id} failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -546,11 +547,11 @@ def move_to_folder(request):
                 file_list = from_id.split(',')
                 Files.objects.filter(id__in=file_list).update(parent_id = to_id, update_time = time.strftime('%Y-%m-%d %H:%M:%S'))
 
-            logging.info(f'Move file {Msg.MsgMoveSuccess}')
+            logger.info(f'Move file {Msg.MsgMoveSuccess}')
             return result(msg=Msg.MsgMoveSuccess)
         except Exception as err:
-            logging.error(f'Move file failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Move file failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgMoveFailure)
 
 
@@ -561,12 +562,12 @@ def get_garbage(request):
             page_num = int(page_num) if page_num else 1
             total_num = Delete.objects.all().count()
             files = Delete.objects.all().order_by('-delete_time')[(page_num - 1) * 20: page_num * 20]
-            logging.info(f'Get garbage  {Msg.MsgGetFileSuccess}')
+            logger.info(f'Get garbage  {Msg.MsgGetFileSuccess}')
             return result(msg=Msg.MsgGetFileSuccess, data={'data': json.loads(serializers.serialize('json', files)),
                                                            'total_page': total_num // 20 + 1, 'page': page_num})
         except Exception as err:
-            logging.error(f'Get garbage error: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Get garbage error: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -581,11 +582,11 @@ def recovery_file_from_garbage(request):
                               parent_id=file.parent_id, path=file.path, size=file.size, md5=file.md5,
                               create_time=file.create_time, update_time=file.update_time)
             files.delete()
-            logging.info(f'Recovery file from garbage, {Msg.MsgOperateSuccess}')
+            logger.info(f'Recovery file from garbage, {Msg.MsgOperateSuccess}')
             return result(msg=Msg.MsgOperateSuccess)
         except Exception as err:
-            logging.error(f'Recovery file from garbage error: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Recovery file from garbage error: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgOperateFailure)
 
 
@@ -608,11 +609,11 @@ def share_file(request):
             file = Files.objects.get(id=file_id)
             Shares.objects.create(id=int(time.time()) % 10000, file_id=file.id, name=file.name, path=file.path, format=file.format,
                                   times=0, total_times=times, create_time=time.strftime('%Y-%m-%d %H:%M:%S'))
-            logging.info(f'{file_id} {Msg.MsgShareSuccess}')
+            logger.info(f'{file_id} {Msg.MsgShareSuccess}')
             return result(msg=Msg.MsgShareSuccess)
         except Exception as err:
-            logging.error(f'Share file failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Share file failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgShareFailure)
 
 
@@ -620,11 +621,11 @@ def get_share_file(request):
     if request.method == 'GET':
         try:
             files = Shares.objects.all().order_by('-create_time')
-            logging.info(f'Get files {Msg.MsgGetFileSuccess}')
+            logger.info(f'Get files {Msg.MsgGetFileSuccess}')
             return result(msg=Msg.MsgGetFileSuccess, data=json.loads(serializers.serialize('json', files)))
         except Exception as err:
-            logging.error(f'Get files error: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Get files error: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -644,13 +645,13 @@ def open_share_file(request, share_id):
                 response['Content-Disposition'] = f'inline;filename="{share.name}"'
                 share.times = share.times + 1
                 share.save()
-                logging.info(f'Open share file success, share id is {share_id}, ip is {host}.')
+                logger.info(f'Open share file success, share id is {share_id}, ip is {host}.')
                 return response
             else:
-                logging.warning(f'Open share file failure: times is too larger. {host}')
+                logger.warning(f'Open share file failure: times is too larger. {host}')
                 return render(request, '404.html')
         except Exception as err:
-            logging.error(f'Open share file failure: {err}')
+            logger.error(f'Open share file failure: {err}')
             return render(request, '404.html')
 
 
@@ -661,12 +662,12 @@ def get_history(request):
             page_num = int(page_num) if page_num else 1
             total_num = History.objects.all().count()
             hostory = History.objects.all().order_by('-operate_time')[(page_num - 1) * 20: page_num * 20]
-            logging.info(f'Get history, {Msg.MsgGetFileSuccess}')
+            logger.info(f'Get history, {Msg.MsgGetFileSuccess}')
             return result(msg=Msg.MsgGetFileSuccess, data={'data': json.loads(serializers.serialize('json', hostory)),
                                                        'total_page': total_num // 20 + 1, 'page': page_num})
         except Exception as err:
-            logging.error(f'Get history error: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Get history error: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
@@ -677,11 +678,11 @@ def md_view(request):
             file = Files.objects.get(id=file_id)
             path = file.path.split('/')
             res = storage.download_bytes(path[0], path[-1])
-            logging.error(f'Get md file success, file id is {file_id}')
+            logger.error(f'Get md file success, file id is {file_id}')
             return render(request, 'editorMD.html', context={'content': res.data.decode(), 'name': file.name, 'file_id': file_id})
         except Exception as err:
-            logging.error(f'Get md file failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Get md file failure: {err}')
+            logger.error(traceback.format_exc())
             return render(request, '404.html')
 
 
@@ -692,11 +693,11 @@ def get_md_file_id(request):
             file = Files.objects.get(id=file_id)
             path = file.path.split('/')
             data = storage.download_bytes(path[0], path[-1])
-            logging.error(f'Get md file success, file id is {file_id}, {Msg.MsgGetFileSuccess}')
+            logger.error(f'Get md file success, file id is {file_id}, {Msg.MsgGetFileSuccess}')
             return result(msg=Msg.MsgGetFileSuccess, data={'data': data.data.decode(), 'name': file.name})
         except Exception as err:
-            logging.error(f'Get file failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Get file failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 def edit_md(request):
@@ -713,13 +714,13 @@ def edit_md(request):
                 file.size = len(data)
                 file.update_time = time.strftime('%Y-%m-%d %H:%M:%S')
                 file.save()
-                logging.info(f'Save md file success, {Msg.MsgSaveSuccess}')
+                logger.info(f'Save md file success, {Msg.MsgSaveSuccess}')
                 return result(msg=Msg.MsgSaveSuccess)
             else:
-                logging.error(f'Save md file failure, {Msg.MsgSaveFailure}')
+                logger.error(f'Save md file failure, {Msg.MsgSaveFailure}')
                 return result(code=1, msg=Msg.MsgSaveFailure)
         except Exception as err:
-            logging.error(f'Edit md file failure: {err}')
-            logging.error(traceback.format_exc())
+            logger.error(f'Edit md file failure: {err}')
+            logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgSaveFailure)
 

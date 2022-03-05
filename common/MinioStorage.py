@@ -8,6 +8,8 @@ from minio import Minio
 from common.config import get_config
 
 
+logger = logging.getLogger('django')
+
 class MinIOStorage:
     def __init__(self, host=None, access_key=None, secret_key=None):
         self.client = None
@@ -42,8 +44,8 @@ class MinIOStorage:
             self.client.set_bucket_policy(bucket_name, self.policy % (bucket_name, bucket_name))
             return f'{bucket_name} 创建成功'
         except Exception as err:
-            logging.error(err)
-            logging.error(traceback.format_exc())
+            logger.error(err)
+            logger.error(traceback.format_exc())
             return f'{bucket_name} 创建失败'
 
     def upload_file_by_path(self, bucket_name: str, object_name: str, file_path: str, content_type=None):
@@ -51,8 +53,8 @@ class MinIOStorage:
             res = self.client.fput_object(bucket_name, object_name, file_path, content_type)
             return res
         except Exception as err:
-            logging.error(err)
-            logging.error(traceback.format_exc())
+            logger.error(err)
+            logger.error(traceback.format_exc())
             return None
 
     def upload_file_bytes(self, bucket_name: str, object_name: str, data: bytes, length: int, content_type=None):
@@ -60,15 +62,15 @@ class MinIOStorage:
             res = self.client.put_object(bucket_name, object_name, data, length, content_type)
             return res
         except Exception as err:
-            logging.error(err)
-            logging.error(traceback.format_exc())
+            logger.error(err)
+            logger.error(traceback.format_exc())
             return None
 
     def delete_file(self, bucket_name: str, object_names: list):
         try:
             self.client.remove_object(bucket_name, object_names)
         except Exception as err:
-            logging.error(err)
+            logger.error(err)
             raise Exception(traceback.format_exc())
 
     def download_bytes(self, bucket_name: str, object_name: str):
@@ -76,8 +78,8 @@ class MinIOStorage:
             res = self.client.get_object(bucket_name, object_name)
             return res
         except Exception as err:
-            logging.error(err)
-            logging.error(traceback.format_exc())
+            logger.error(err)
+            logger.error(traceback.format_exc())
             return None
 
     def save_file(self, bucket_name: str, object_name: str, file_path: str):
@@ -85,6 +87,6 @@ class MinIOStorage:
             res = self.client.fget_object(bucket_name, object_name, 'temp/'+ file_path)
             return res
         except Exception as err:
-            logging.error(err)
-            logging.error(traceback.format_exc())
+            logger.error(err)
+            logger.error(traceback.format_exc())
             return None
