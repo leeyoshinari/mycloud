@@ -21,7 +21,7 @@ let init_len = document.getElementById("editormd").getElementsByTagName("textare
 document.getElementById("file_id").name = init_len;
 window.setInterval(function () {
             get_textarea_text();
-    }, 10000
+    }, 30000
 )
 
 function get_textarea_text() {

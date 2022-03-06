@@ -173,7 +173,7 @@ def upload_file(request):
             try:
                 file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
                 current_time = time.strftime('%Y-%m-%d %H:%M:%S')
-                Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=file_name.split('.')[-1],
+                Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=file_name.split('.')[-1].lower(),
                                             parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
                                             size=file_size, md5=md5, create_time=current_time, update_time=current_time)
                 logger.info(f'{file_name} {Msg.MsgUploadSuccess}')
@@ -209,12 +209,12 @@ def upload_file_by_path(request):
             random_i = int(time.time() * 100) % 100
             bucket_name = str((500 + random_i * 5) ^ (2521 - random_i * 2))
             object_name = str(random.randint(1, 99)) + str(int(time.time())) + os.path.splitext(file)[-1]
-            res = storage.upload_file_by_path(bucket_name, object_name, file, content_type=content_type.get(file.split('.')[-1], 'application/octet-stream'))
+            res = storage.upload_file_by_path(bucket_name, object_name, file, content_type=content_type.get(file.split('.')[-1].lower(), 'application/octet-stream'))
             if res:
                 try:
                     file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
                     current_time = time.strftime('%Y-%m-%d %H:%M:%S')
-                    Files.objects.create(id=file_id, name=os.path.basename(file), origin_name=os.path.basename(file), format=file.split('.')[-1],
+                    Files.objects.create(id=file_id, name=os.path.basename(file), origin_name=os.path.basename(file), format=file.split('.')[-1].lower(),
                                          parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
                                          size=os.path.getsize(file), md5=md5, create_time=current_time, update_time=current_time)
                     total_num[1] += 1
@@ -621,10 +621,10 @@ def get_share_file(request):
     if request.method == 'GET':
         try:
             files = Shares.objects.all().order_by('-create_time')
-            logger.info(f'Get files {Msg.MsgGetFileSuccess}')
+            logger.info(f'Get share files {Msg.MsgGetFileSuccess}')
             return result(msg=Msg.MsgGetFileSuccess, data=json.loads(serializers.serialize('json', files)))
         except Exception as err:
-            logger.error(f'Get files error: {err}')
+            logger.error(f'Get share files error: {err}')
             logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgGetFileFailure)
 

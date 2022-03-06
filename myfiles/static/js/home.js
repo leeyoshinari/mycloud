@@ -994,6 +994,8 @@ function open_md(file_id) {
         let file_id = document.getElementById("iframe_id").contentWindow.document.getElementById("file_id").value;
         let content_len = document.getElementById("iframe_id").contentWindow.document.getElementById("file_id").name;
         if (parseInt(content_len) === content.length) {
+            document.getElementById("iframe_id").src = '';
+            document.getElementsByClassName("iframe_div")[0].style.display = 'none';
             return;
         }
         let post_data = {
