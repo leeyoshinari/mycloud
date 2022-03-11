@@ -171,7 +171,7 @@ LOGGING = {
         'default': {
             'class': 'logging.handlers.RotatingFileHandler',  # 保存到文件，自动切
             'filename': os.path.join(BASE_LOG_DIR, "mycloud.log"),  # 日志文件
-            'maxBytes': 1024 * 1024 * 10,  # 日志大小 10M
+            'maxBytes': 1024 * 1024 * 5,  # 日志大小 10M
             'backupCount': int(get_config('backupCount')),  # 最多备份几个
             'formatter': 'standard',
             'encoding': 'utf-8',

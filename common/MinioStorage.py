@@ -39,6 +39,8 @@ class MinIOStorage:
     def create_bucket(self, bucket_name: str):
         try:
             if self.client.bucket_exists(bucket_name):
+                # 不明原因，重启 minio 后，通过 url 直接访问 minio 的文件会出现 403，所以重置桶的策略
+                self.client.set_bucket_policy(bucket_name, self.policy % (bucket_name, bucket_name))
                 return f'{bucket_name} 已存在'
             self.client.make_bucket(bucket_name)
             self.client.set_bucket_policy(bucket_name, self.policy % (bucket_name, bucket_name))
