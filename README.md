@@ -19,7 +19,7 @@
 ![](https://github.com/leeyoshinari/mycloud/blob/main/myfiles/static/img/architecture.png)
 
 ## 部署
-1、克隆 `git clone https://github.com/leeyoshinari/mycloud.git`；
+1、克隆 `git clone https://github.com/leeyoshinari/mycloud.git` ；
 
 2、进入目录 `cd mycloud`，修改配置文件`config.conf`；
 

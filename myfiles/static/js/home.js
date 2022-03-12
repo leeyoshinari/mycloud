@@ -939,7 +939,7 @@ function get_share_file() {
                     s = s + '<td>' + results[i]['fields']['times'] + '</td>';
                     s = s + '<td>' + results[i]['fields']['total_times'] + '</td>';
                     s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
-                    s = s + '<td style="white-space: normal;"><button class="actions" onclick="show_share_link(\'' + results[i]['pk'] + '\')">查看分享链接</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 6)">删除</button></td></tr>';
+                    s = s + '<td style="white-space: normal;"><button class="actions" onclick="show_share_link(\'' + results[i]['pk'] + '\')">查看分享链接</button><button class="actions" onclick="copy_share_link(\'' + results[i]['pk'] + '\', 6)">复制分享链接</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 6)">删除</button></td></tr>';
                 }
                 document.getElementById("tbody").innerHTML = s;
                 PagingManage($('#paging'), 1, 1, 'abc')
@@ -951,7 +951,17 @@ function get_share_file() {
 }
 function show_share_link(file_id) {
     let share_url = window.location.href + 'open/' + file_id;
-    confirm('分享链接为：' + share_url);
+    alert('分享链接为：' + share_url);
+}
+function copy_share_link(file_id) {
+    let share_url = window.location.href + 'open/' + file_id;
+    let aux = document.createElement('input');
+    aux.setAttribute('value', share_url);
+    document.body.appendChild(aux);
+    aux.select();
+    document.execCommand('copy');
+    document.body.removeChild(aux);
+    $.Toast('复制成功 ~', 'success');
 }
 
 function get_history(page) {

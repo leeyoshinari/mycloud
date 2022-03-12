@@ -333,28 +333,28 @@ def delete_file(request):
             host = host if host else '127.0.0.1'
             file_list = file_id.split(',')
             current_time = time.strftime('%Y-%m-%d %H:%M:%S')
-            if is_delete == '0':
+            if is_delete == '0':    # 逻辑删除，删除到回收站
                 files = Files.objects.filter(id__in=file_list)
                 for file in files:
                     Delete.objects.create(id=file.id, name=file.name, origin_name=file.origin_name, format=file.format,
                                           parent_id=file.parent_id, path=file.path, size=file.size, md5=file.md5,
                                           create_time=file.create_time, update_time=file.update_time, delete_time=current_time)
                 files.delete()
-            if is_delete == '1':
+            if is_delete == '1':    # 物理删除，删除回收站
                 files = Delete.objects.filter(id__in=file_list)
                 for file in files:
                     path = file.path.split('/')
                     History.objects.create(file_id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip=host)
                     storage.delete_file(path[0], path[-1])
                     file.delete()
-            if is_delete == '9':
+            if is_delete == '9':    # 物理删除，清空回收站
                 files = Delete.objects.all()
                 for file in files:
                     path = file.path.split('/')
                     History.objects.create(file_id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip=host)
                     storage.delete_file(path[0], path[-1])
                     file.delete()
-            if is_delete == '6':
+            if is_delete == '6':    # 删除分享记录
                 Shares.objects.get(id=file_id).delete()
             logger.info(f'Delete Folder success, File-id: {file_id}')
             return result(msg=Msg.MsgDeleteSuccess)

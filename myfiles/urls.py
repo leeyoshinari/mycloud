@@ -34,6 +34,7 @@ urlpatterns = [
     path('file/recovery', views.recovery_file_from_garbage, name='recovery_file'),
     path('file/history', views.get_history, name='get_history'),
     path('open/<int:share_id>', views.open_share_file, name='open_share_file'),
+    path('open/share/list', views.get_share_file, name='get_share_no_auth'),
 
     path('md/view', views.md_view, name='md_view'),
     path('md/edit', views.edit_md, name="md_edit"),
