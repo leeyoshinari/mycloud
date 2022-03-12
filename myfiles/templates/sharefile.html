@@ -1,0 +1,85 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>MyCloud</title>
+    <meta charset="utf-8">
+    <style type="text/css">
+        .detail {
+            {#position: absolute;#}
+            {#width: 90%;#}
+            background-color: #ffffff;
+        }
+        table {
+            width: 100%;
+            {#table-layout: fixed;#}
+        }
+        th {
+            text-align: left;
+            font-weight: normal;
+        }
+        .table_style {
+            margin: auto;
+            background-color: #e2e2e2;
+        }
+
+        td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        tr {
+            height: 33px;
+            text-align: left;
+        }
+        .actions {
+            color: blue;
+            cursor: pointer;
+            border: none;
+            font-size: inherit;
+            margin-right: 10px;
+            margin-left: 10px;
+            background-color: transparent;
+        }
+    </style>
+</head>
+<body>
+<div class="detail">
+    <table id="layout-table">
+        <thead>
+            <tr class="table_style">
+                <th width="30%">名称</th>
+                <th width="10%">已打开次数</th>
+                <th width="8%">总次数</th>
+                <th width="15%">创建时间</th>
+                <th width="20">操作</th>
+            </tr>
+        </thead>
+        <tbody id="tbody">
+            {% for data in datas %}
+                <tr><td>{{ data.fields.name }}</td>
+                <td>{{ data.fields.times }}</td>
+                <td>{{ data.fields.total_times }}</td>
+                <td>{{ data.fields.create_time }}</td>
+                <td style="white-space: normal;"><button class="actions" onclick="open_file({{ data.pk }})">打开文件</button><button class="actions" onclick="copy_share_link({{ data.pk }})">复制分享链接</button></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+<script type="text/javascript">
+    function copy_share_link(file_id) {
+        let share_url = window.location.href.substring(0, window.location.href.length-10) + file_id;
+        let aux = document.createElement('input');
+        aux.setAttribute('value', share_url);
+        document.body.appendChild(aux);
+        aux.select();
+        document.execCommand('copy');
+        document.body.removeChild(aux);
+    }
+    function open_file(file_id) {
+        let share_url = window.location.href.substring(0, window.location.href.length-10) + file_id;
+        window.open(share_url);
+    }
+</script>
+</html>

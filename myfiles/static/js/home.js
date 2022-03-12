@@ -939,7 +939,7 @@ function get_share_file() {
                     s = s + '<td>' + results[i]['fields']['times'] + '</td>';
                     s = s + '<td>' + results[i]['fields']['total_times'] + '</td>';
                     s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
-                    s = s + '<td style="white-space: normal;"><button class="actions" onclick="show_share_link(\'' + results[i]['pk'] + '\')">查看分享链接</button><button class="actions" onclick="copy_share_link(\'' + results[i]['pk'] + '\', 6)">复制分享链接</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 6)">删除</button></td></tr>';
+                    s = s + '<td style="white-space: normal;"><button class="actions" onclick="show_share_link(\'' + results[i]['pk'] + '\')">查看分享链接</button><button class="actions" onclick="copy_share_link(\'' + results[i]['pk'] + '\')">复制分享链接</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 6)">删除</button></td></tr>';
                 }
                 document.getElementById("tbody").innerHTML = s;
                 PagingManage($('#paging'), 1, 1, 'abc')

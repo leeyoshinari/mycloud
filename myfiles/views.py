@@ -629,6 +629,18 @@ def get_share_file(request):
             return result(code=1, msg=Msg.MsgGetFileFailure)
 
 
+def get_share_file_no_auth(request):
+    if request.method == 'GET':
+        try:
+            files = Shares.objects.all().order_by('-create_time')
+            logger.info(f'Get share files {Msg.MsgGetFileSuccess}')
+            return render(request, 'sharefile.html', context={'datas': json.loads(serializers.serialize('json', files))})
+        except Exception as err:
+            logger.error(f'Get share files error: {err}')
+            logger.error(traceback.format_exc())
+            return result(code=1, msg=Msg.MsgGetFileFailure)
+
+
 def open_share_file(request, share_id):
     if request.method == 'GET':
         try:
