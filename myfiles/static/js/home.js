@@ -524,7 +524,7 @@ function search_file(page_num) {
                         s = s + '<td>' + results[i]['fields']['format'] + '</td>';
                         s = s + '<td>' + results[i]['fields']['create_time'].replace('T', ' ') + '</td>';
                         s = s + '<td>' + results[i]['fields']['update_time'].replace('T', ' ') + '</td>';
-                        s = s + '<td style="white-space: normal;"><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 0)">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['fields']['parent'] + '\')">文件位置</button></td></tr>';
+                        s = s + '<td style="white-space: normal;"><button class="actions" onclick="rename_file(\'' + results[i]['pk'] + '\')">重命名</button><button class="actions" onclick="download_file(\'' + results[i]['pk'] + '\')">下载</button><button class="actions" onclick="move_to_folder(\'' + results[i]['pk'] + '\', \'file\')">移动</button><button class="actions" onclick="delete_file(\'' + results[i]['pk'] + '\', 0)">删除</button><button class="actions" onclick="find_origin_path(\'' + results[i]['fields']['parent'] + '\')">文件位置</button></td></tr>';
                     }
                 }
                 document.getElementById("tbody").innerHTML = s;

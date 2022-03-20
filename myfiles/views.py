@@ -24,8 +24,8 @@ from common.MinioStorage import MinIOStorage
 
 logger = logging.getLogger('django')
 storage = MinIOStorage()
-formats = {'image': ['jpg', 'jpeg', 'bmp', 'png'], 'video': ['mp4', 'avi'], 'document': ['txt', 'md'],
-           'docx': ['docx'], 'xlsx': ['xlsx'], 'pptx': ['pptx'], 'pdf': ['pdf'], 'music': ['mp3']}
+formats = {'image': ['jpg', 'jpeg', 'bmp', 'png'], 'video': ['mp4', 'avi'], 'document': ['txt', 'md', 'doc', 'docx',
+           'xls', 'xlsx', 'ppt', 'pptx', 'pdf'], 'music': ['mp3']}
 content_type = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': 'image/bmp', 'png': 'image/png', 'pdf': 'application/pdf',
                 'mp4': 'video/mp4', 'zip': 'application/zip', 'mp3': 'audio/mpeg'}
 
