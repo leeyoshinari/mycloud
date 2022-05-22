@@ -61,7 +61,7 @@ header h2,h3{
 
 .timeline:before {
   position: absolute;
-  left: 120px;
+  left: 140px;
   top: 0;
   content: ' ';
   display: block;
@@ -118,7 +118,7 @@ header h2,h3{
 .direction-l {
 	top: 28px;
 	float: left;
-	width: 100px;
+	width: 120px;
 	position: relative;
     text-align: right;
 }
@@ -202,7 +202,7 @@ header h2,h3{
 
   .direction-l {
     position: relative;
-    width: 100px;
+    width: 120px;
     float: left;
     text-align: right;
   }
@@ -250,7 +250,7 @@ header h2,h3{
 
   .direction-l {
     position: relative;
-    width: 100px;
+    width: 120px;
     float: left;
     text-align: right;
   }
@@ -271,7 +271,7 @@ header h2,h3{
 
   .direction-l {
     position: relative;
-    width: 100px;
+    width: 120px;
     float: left;
     text-align: right;
   }
@@ -292,7 +292,7 @@ header h2,h3{
 
   .direction-l {
     position: relative;
-    width: 100px;
+    width: 120px;
     float: left;
     text-align: right;
   }
