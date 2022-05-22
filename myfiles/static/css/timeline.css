@@ -560,7 +560,7 @@ header h2,h3{
 
 .textarea{
     font-size: large;
-    font-family: cursive;
+    font-family: inherit;
     width: 100%;
     max-height: 520px;
     _height: 120px;
