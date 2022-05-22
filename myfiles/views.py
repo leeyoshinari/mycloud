@@ -15,7 +15,7 @@ from django.core import serializers
 from django.contrib import auth
 from django.http import StreamingHttpResponse
 from django.db.models.deletion import ProtectedError
-from .models import Catalog, Files, History, Delete, Shares
+from .models import Catalog, Files, History, Delete, Shares, MyTimeLine
 from common.Results import result
 from common.Messages import Msg
 from common.calc import calc_md5, calc_file_md5
@@ -49,8 +49,7 @@ def login(request):
             if session:
                 auth.login(request, session)
                 request.session.set_expiry(3600)
-                History.objects.create(file_id=-1, file_name=username, operate='login', ip=ip,
-                                       operate_time=time.strftime('%Y-%m-%d %H:%M:%S'))
+                History.objects.create(file_id=-1, file_name=username, operate='login', ip=ip)
                 logger.info(f'{username} {Msg.MsgLonginSuccess}')
                 return result(msg=Msg.MsgLonginSuccess)
             else:
@@ -67,8 +66,7 @@ def logout(request):
     ip = request.headers.get('x-real-ip')
     ip = ip if ip else '127.0.0.1'
     auth.logout(request)
-    History.objects.create(file_id=-1, file_name=username, operate='logout', ip=ip,
-                           operate_time=time.strftime('%Y-%m-%d %H:%M:%S'))
+    History.objects.create(file_id=-1, file_name=username, operate='logout', ip=ip)
     logger.info(f'{username} {Msg.MsgLongoutSuccess}')
     return redirect('myfiles:login')
 
@@ -93,10 +91,9 @@ def create_file(request):
             if res:
                 try:
                     file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
-                    current_time = time.strftime('%Y-%m-%d %H:%M:%S')
                     Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=file_format,
                                                 parent_id=folder_id, path=f'{bucket_name}/{res.object_name}',
-                                                size=0, md5=0, create_time=current_time, update_time=current_time)
+                                                size=0, md5=0)
                     logger.info(f'{file_name} {Msg.MsgUploadSuccess}')
                     return result(msg=Msg.MsgUploadSuccess, data=file_name)
                 except Exception as err:
@@ -120,9 +117,7 @@ def create_folder(request):
             file_name = request.POST.get('name')
             parent_id = request.POST.get('id')
             file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
-            current_time = time.strftime('%Y-%m-%d %H:%M:%S')
-            folder = Catalog.objects.create(id=file_id, parent_id=parent_id, name=file_name,
-                                            create_time=current_time, update_time=current_time)
+            folder = Catalog.objects.create(id=file_id, parent_id=parent_id, name=file_name)
             logger.info(f'Create Folder success, Folder-id-name: {folder.id},{folder.name}')
             return result(msg=Msg.MsgCreateSuccess.format(folder.name))
         except Exception as err:
@@ -172,10 +167,9 @@ def upload_file(request):
         if res:
             try:
                 file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
-                current_time = time.strftime('%Y-%m-%d %H:%M:%S')
                 Files.objects.create(id=file_id, name=file_name, origin_name=file_name, format=file_name.split('.')[-1].lower(),
                                             parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
-                                            size=file_size, md5=md5, create_time=current_time, update_time=current_time)
+                                            size=file_size, md5=md5)
                 logger.info(f'{file_name} {Msg.MsgUploadSuccess}')
                 return result(msg=Msg.MsgUploadSuccess, data=file_name)
             except Exception as err:
@@ -213,10 +207,9 @@ def upload_file_by_path(request):
             if res:
                 try:
                     file_id = str(random.randint(1000, 9999)) + str(int(time.time()))
-                    current_time = time.strftime('%Y-%m-%d %H:%M:%S')
                     Files.objects.create(id=file_id, name=os.path.basename(file), origin_name=os.path.basename(file), format=file.split('.')[-1].lower(),
                                          parent_id=parent_id, path=f'{bucket_name}/{res.object_name}',
-                                         size=os.path.getsize(file), md5=md5, create_time=current_time, update_time=current_time)
+                                         size=os.path.getsize(file), md5=md5)
                     total_num[1] += 1
                     logger.info(f'{file} {Msg.MsgUploadSuccess}')
                 except Exception as err:
@@ -344,14 +337,14 @@ def delete_file(request):
                 files = Delete.objects.filter(id__in=file_list)
                 for file in files:
                     path = file.path.split('/')
-                    History.objects.create(file_id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip=host)
+                    History.objects.create(file_id=file.id, file_name=file.name, operate='delete', ip=host)
                     storage.delete_file(path[0], path[-1])
                     file.delete()
             if is_delete == '9':    # 物理删除，清空回收站
                 files = Delete.objects.all()
                 for file in files:
                     path = file.path.split('/')
-                    History.objects.create(file_id=file.id, file_name=file.name, operate='delete', operate_time=current_time, ip=host)
+                    History.objects.create(file_id=file.id, file_name=file.name, operate='delete', ip=host)
                     storage.delete_file(path[0], path[-1])
                     file.delete()
             if is_delete == '6':    # 删除分享记录
@@ -608,7 +601,7 @@ def share_file(request):
             times = int(times) if times else 5
             file = Files.objects.get(id=file_id)
             Shares.objects.create(id=int(time.time()) % 10000, file_id=file.id, name=file.name, path=file.path, format=file.format,
-                                  times=0, total_times=times, create_time=time.strftime('%Y-%m-%d %H:%M:%S'))
+                                  times=0, total_times=times)
             logger.info(f'{file_id} {Msg.MsgShareSuccess}')
             return result(msg=Msg.MsgShareSuccess)
         except Exception as err:
@@ -647,8 +640,7 @@ def open_share_file(request, share_id):
             host = request.headers.get('x-real-ip')
             host = host if host else '127.0.0.1'
             share = Shares.objects.get(id=share_id)
-            History.objects.create(file_id=share.file_id, file_name=share.name, operate='openShare',
-                                   operate_time=time.strftime('%Y-%m-%d %H:%M:%S'), ip=host)
+            History.objects.create(file_id=share.file_id, file_name=share.name, operate='openShare', ip=host)
             if share.times < share.total_times:
                 path = share.path.split('/')
                 response = StreamingHttpResponse(storage.download_bytes(path[0], path[-1]))
@@ -690,7 +682,7 @@ def md_view(request):
             file = Files.objects.get(id=file_id)
             path = file.path.split('/')
             res = storage.download_bytes(path[0], path[-1])
-            logger.error(f'Get md file success, file id is {file_id}')
+            logger.info(f'Get md file success, file id is {file_id}')
             return render(request, 'editorMD.html', context={'content': res.data.decode(), 'name': file.name, 'file_id': file_id})
         except Exception as err:
             logger.error(f'Get md file failure: {err}')
@@ -736,3 +728,60 @@ def edit_md(request):
             logger.error(traceback.format_exc())
             return result(code=1, msg=Msg.MsgSaveFailure)
 
+def get_timeline_by_id(request):
+    if request.method == 'GET':
+        try:
+            username = request.user.username
+            host = request.headers.get('x-real-ip')
+            host = host if host else '127.0.0.1'
+            timeline_id = request.GET.get('id')
+            sweet = MyTimeLine.objects.get(id=timeline_id)
+            logger.info(f'Get Time Line {timeline_id} success, ip: {host}, operator: {username}')
+            return result(msg='Get Success ~', data={'title': sweet.title, 'desc': sweet.content,
+                                                     'create_time': sweet.create_time.strftime('%Y-%m-%d %H:%M:%S')})
+        except:
+            logger.error(traceback.format_exc())
+            return result(code=1, msg='System Error ~')
+
+def timeline(request):
+    if request.method == 'POST':
+        try:
+            username = request.user.username
+            host = request.headers.get('x-real-ip')
+            host = host if host else '127.0.0.1'
+            date_str = request.POST.get('select_date')
+            mood = request.POST.get('mood')
+            title = request.POST.get('title')
+            detail = request.POST.get('detail')
+            sweet = MyTimeLine.objects.create(id=int(time.time()), time_line=date_str, mood=mood, title=title, content=detail)
+            logger.info(f'Sweet Time Line create success, id: {sweet.id}, ip: {host}, operator: {username}')
+            return result(msg='Add success ~')
+        except:
+            logger.error(traceback.format_exc())
+            return result(code=1, msg='System Error ~')
+    else:
+        try:
+            page_size = 20
+            host = request.headers.get('x-real-ip')
+            host = host if host else '127.0.0.1'
+            mood = request.GET.get('mood')
+            order_by = request.GET.get('order_by')
+            page = request.GET.get('page')
+            page = int(page) if page else 1
+            order_by = order_by if order_by else ''
+            if mood:
+                total_line = MyTimeLine.objects.filter(mood=mood).count()
+                res = MyTimeLine.objects.filter(mood=mood).order_by(f'{order_by}time_line')[page_size * (page - 1): page_size * page]
+            else:
+                total_line = MyTimeLine.objects.all().count()
+                res = MyTimeLine.objects.all().order_by(f'{order_by}time_line')[page_size * (page - 1): page_size * page]
+            tips = ['相识', '在一起']    # 文案
+            tip_times = [1652994173, 1652999173]    # 时间戳
+            index = int(time.time()) % len(tips)
+            logger.info(f'Get TimeLine success, ip: {host}')
+            return render(request, 'timeline.html', context={'datas': res, 'page': page, 'mood': mood, 'order_by': order_by,
+                                                             'tips': tips[index], 'tip_times': tip_times[index],
+                                                             'total_page': (total_line + page_size - 1) // page_size})
+        except:
+            logger.error(traceback.format_exc())
+            return render(request, '404.html')

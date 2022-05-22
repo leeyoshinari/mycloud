@@ -188,4 +188,4 @@ LOGGING = {
 }
 
 # 不需要登陆校验的 url
-EXCLUDE_URL = 'admin|login|open'
+EXCLUDE_URL = 'admin|login|open|timeline'

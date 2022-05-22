@@ -764,7 +764,7 @@ function show_file(path, format) {
         if (image_format.indexOf(format) > -1) {
             modal_content.innerHTML = '<img src="getFile/' + path + '">';
         } else if (video_format.indexOf(format) > -1) {
-            modal_content.innerHTML = '<link href="static/css/video-js.min.css" rel="stylesheet"><script src="static/js/video.min.js"></script><video id="my_video" class="video-js" controls autoplay preload="none" data-setup="{}"><source src="getFile/' + path + '" type="video/mp4"></video>';
+            modal_content.innerHTML = '<link href="static/css/video-js.min.css" rel="stylesheet"><script src="static/js/video.min.js"></script><video id="my_video" class="video-js" controls autoplay preload="none" data-setup="{}"><source src="getFile/' + path + '" type="video/mp4"><track src="getFile/3030/951647768425.ass" srclang="zh" kind="subtitles" label="zh"></video>';
         } else if (music_format.indexOf(format) > -1) {
             modal_content.innerHTML = '<audio id="my_music" controls autoplay preload="none"><source src="getFile/' + path + '" type="audio/mpeg"></audio>';
         }

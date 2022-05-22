@@ -1,0 +1,338 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>OurTimeLines</title>
+		<link rel="shutcut icon" type="image/png" sizes="96x96" href="">
+		<link rel="stylesheet" type="text/css" href="{% static 'css/timeline.css' %}">
+        <script src="{% static 'js/jquery.js' %}"></script>
+	</head>
+	<body>
+        <div>
+            <button id="add-timeline">添加记录</button>
+            <select id="order_by">
+                {% if order_by == '-' %}
+                    <option value="">升序</option>
+                    <option value="-" selected>降序</option>
+                {% else %}
+                    <option value="" selected>升序</option>
+                    <option value="-">降序</option>
+                {% endif %}
+            </select>
+            <select id="type">
+                <option value="" selected>所有的记录</option>
+                <option value="2">只看高兴的</option>
+                <option value="1">只看正常的</option>
+                <option value="0">只看不高兴的</option>
+            </select>
+        </div>
+        <header>
+            <h2>
+                亲爱的，今天是我们{{ tips }}的
+            </h2>
+            <h3>
+                第 <span id="day"></span> 天
+                <span id="hour"></span> 小时
+                <span id="minute"></span> 分钟
+                <span id="seconds"></span> 秒
+            </h3>
+        </header>
+		<ul class="timeline">
+            {% for s in datas %}
+            <li>
+                <div class="direction-l">
+                    <div class="flag-wrapper">
+                        <span class="hexa"></span>
+                        <span class="time-wrapper">
+                            {% if s.mood == 0 %}
+                                <span class="time" style="color: red;">{{ s.time_line | date:"Y-m-d" }}</span>
+                            {% elif s.mood == 2 %}
+                                <span class="time" style="color: green;">{{ s.time_line | date:"Y-m-d" }}</span>
+                            {% else %}
+                                <span class="time" style="color: blue;">{{ s.time_line | date:"Y-m-d" }}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="direction-r">
+                    <div class="desc" id="{{ s.id }}">{{ s.title }}</div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="myModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close">&times;</span>
+                    <h2 id="title-name">添加时间线</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-col">
+                        <div class="label">
+                            <label>发生时间: </label>
+                        </div>
+                        <div class="input" style="width: 120px;">
+                            <input type="date" id="select-date" value="">
+                        </div>
+                        <div class="label" style="margin-left: 15%; width: 69px;">
+                            <label>心情: </label>
+                         </div>
+                        <div class="input" style="width: 120px;">
+                            <select id="mood">
+                                <option value="" selected>选择此时的心情</option>
+                                <option value="0">不高兴</option>
+                                <option value="1">正常</option>
+                                <option value="1">高兴</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-col">
+                        <div class="label">
+                            <label>标题: </label>
+                        </div>
+                        <div class="input">
+                            <input type="text" id="title" maxlength="25" placeholder="请输入标题">
+                        </div>
+                    </div>
+                    <!--div class="modal-col">
+                        <div class="label">
+                            <label>心情: </label>
+                         </div>
+                        <div class="input">
+                            <select id="is_re" style="width: 120px;">
+                                <option value="0">不高兴</option>
+                                <option value="1" selected="selected">正常</option>
+                                <option value="1">高兴</option>
+                            </select>
+                        </div>
+                    </div-->
+                    <div class="modal-col">
+                        <div class="label">
+                            <label>详细描述：</label>
+                        </div>
+                        <div class="input">
+                            <div class="textarea" id="detail" contenteditable="true"
+                                 style="border: 1px solid rgba(82, 168, 236, 0.8);"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="cancel">取消</a>
+                    <a class="submit">提交</a>
+                </div>
+            </div>
+        </div>
+        <div class="myModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close">&times;</span>
+                    <h2 id="view-title"></h2>
+                    <p id="view-time"></p>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-col">
+                        <div class="input" style="width: 93%; margin-left: 3%; margin-top: 0;">
+                            <div class="textarea" id="view-detail" style="margin-top: 0"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a class="cancel"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+	</body>
+    <script type="text/javascript">
+        let start_time = {{ tip_times }};
+        let select_type = document.getElementById('type');
+        for (let i=0; i<select_type.options.length; i++) {
+            if (select_type.options[i].value === '{{ mood }}') {
+                select_type.options[i].selected = true;
+                break;
+            }
+        }
+
+        let order_by = document.getElementById('order_by').value;
+        let moods = document.getElementById('type').value;
+        let url = '{% url 'myfiles:timeline' %}?order_by=' + order_by + '&mood=' + moods;
+        PagingManage($('#paging'), {{ total_page }}, {{ page }}, url + '&page=');
+
+        document.getElementById('order_by').onchange = function () {
+            let order_by = document.getElementById('order_by').value;
+            let moods = document.getElementById('type').value;
+            window.location.href = '{% url 'myfiles:timeline' %}?order_by=' + order_by + '&mood=' + moods;
+        }
+
+        document.getElementById('type').onchange = function () {
+            let order_by = document.getElementById('order_by').value;
+            let moods = document.getElementById('type').value;
+            window.location.href = '{% url 'myfiles:timeline' %}?order_by=' + order_by + '&mood=' + moods;
+        }
+
+        $("#add-timeline").click(function () {
+            let modal = document.getElementsByClassName('myModal')[0];
+            let close_a = document.getElementsByClassName("close")[0];
+            let cancel_a = document.getElementsByClassName("cancel")[0];
+            let submit_a = document.getElementsByClassName("submit")[0];
+
+            modal.style.display = "block";
+
+            close_a.onclick = function() {
+                modal.style.display = "none";
+            }
+            cancel_a.onclick = function() {
+                modal.style.display = "none";
+            }
+            submit_a.onclick = function() {
+                let select_date = document.getElementById('select-date').value;
+                let mood = document.getElementById('mood').value;
+                let title = document.getElementById('title').value;
+                let detail = document.getElementById('detail').innerText;
+                if (!select_date) {alert('请选择一个时间 ~'); return;}
+                if (!mood) {alert('请选择一个心情 ~'); return;}
+                if (!title) {alert('请输入标题 ~'); return;}
+                if (!detail) {alert('请输入内容 ~'); return;}
+                let postdata = {
+                    select_date: select_date,
+                    mood: mood,
+                    title: title,
+                    detail: detail,
+                };
+                $.ajax({
+                    type: 'post',
+                    url: "{% url 'myfiles:timeline' %}",
+                    data: postdata,
+                    datatype: 'json',
+                    success: function (data) {
+                        if(data['code'] === 1) {
+                            return;
+                        } else {
+                            {#$.Toast(data['msg'], 'success');#}
+                            window.location.href = "{% url 'myfiles:timeline' %}";
+                        }
+                    },
+                });
+            };
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            }
+        });
+
+        function count_time() {
+            let current_time = Math.floor(new Date().getTime() / 1000);
+            let time_delte = current_time - start_time;
+            let days = Math.floor(time_delte / 86400);
+            let hours = Math.floor(time_delte / 3600 % 24);
+            let minute = Math.floor(time_delte / 60 % 60);
+            let seconds = Math.floor(time_delte % 60);
+            document.getElementById("day").innerText = days;
+            document.getElementById("hour").innerText = hours;
+            document.getElementById("minute").innerText = minute;
+            document.getElementById("seconds").innerText = seconds;
+        }
+        count_time();
+        setInterval(count_time, 1000);
+
+        let timeline_desc = document.getElementsByClassName('desc');
+        for(let i=0; i<timeline_desc.length; i++) {
+            timeline_desc[i].onclick = function () {
+                get_detail(timeline_desc[i].id);
+            }
+        }
+
+        function get_detail(timeline_id) {
+            $.ajax({
+                type: 'get',
+                url: '{% url 'myfiles:get_timeline' %}?id=' + timeline_id,
+                success: function (data) {
+                    if(data['code'] === 1) {
+                        alert(data['msg']);
+                    } else {
+                        let modal = document.getElementsByClassName('myModal')[1];
+                        let close_a = document.getElementsByClassName("close")[1];
+                        modal.style.display = "block";
+                        close_a.onclick = function() {
+                            modal.style.display = "none";
+                        }
+                        document.getElementById('view-detail').innerText = data['data']['desc'];
+                        document.getElementById('view-title').innerText = data['data']['title'];
+                        document.getElementById('view-time').innerText = '写于：' + data['data']['create_time'];
+                        window.onclick = function(event) {
+                            if (event.target === modal) {
+                                modal.style.display = "none";
+                            }
+                        }
+                    }
+                }
+            })
+        }
+
+        function PagingManage(obj, pageNum, currentpage, fenye_url) {
+            if (obj) {
+                let showPageNum = 5;
+                let pagehtml = "";
+                if (pageNum <= 1) {
+                    pagehtml = "";
+                }
+                if (pageNum > 1) {
+                    if (currentpage > 1) {
+                        pagehtml += '<li><a href=\'' + fenye_url + (currentpage - 1) + '\'>上一页</a></li>';
+                    }
+                    if (showPageNum >= pageNum) {
+                        for (let i = 1; i <= showPageNum; i++) {
+                        if (i > pageNum) {
+                            break;
+                        }
+                        if (i === currentpage) {
+                            pagehtml += '<li><a class="active" href=\'' + fenye_url + i + '\'>' + i + '</a></li>';
+                        } else {
+                            pagehtml += '<li><a href=\'' + fenye_url + i + '\'>' + i + '</a></li>';
+                        }
+                    }
+                    } else {
+                        if (currentpage < 4) {
+                            for (let i = 1; i <= 5; i++) {
+                                if (i === currentpage) {
+                                    pagehtml += '<li><a class="active" href=\'' + fenye_url + i + '\'>' + i + '</a></li>';
+                                } else {
+                                    pagehtml += '<li><a href=\'' + fenye_url + i + '\'>' + i + '</a></li>';
+                                }
+                            }
+                            pagehtml += '<li><a>...</a></li>';
+                            pagehtml += '<li><a href=\'' + fenye_url + pageNum + '\'>' + pageNum + '</a></li>';
+                        } else if (currentpage > pageNum-3) {
+                            pagehtml += '<li><a href=\'' + fenye_url + 1 + '\'>' + 1 + '</a></li>';
+                            pagehtml += '<li><a>...</a></li>';
+                            for (let i = pageNum-4; i <= pageNum; i++) {
+                                if (i === currentpage) {
+                                    pagehtml += '<li><a class="active" href=\'' + fenye_url + i + '\'>' + i + '</a></li>';
+                                } else {
+                                    pagehtml += '<li><a href=\'' + fenye_url + i + '\'>' + i + '</a></li>';
+                                }
+                            }
+                        } else {
+                            pagehtml += '<li><a href=\'' + fenye_url + 1 + '\'>' + 1 + '</a></li>';
+                            pagehtml += '<li><a>...</a></li>';
+                            for (let i = currentpage-1; i <= currentpage+1; i++) {
+                                if (i === currentpage) {
+                                    pagehtml += '<li><a class="active" href=\'' + fenye_url + i + '\'>' + i + '</a></li>';
+                                } else {
+                                    pagehtml += '<li><a href=\'' + fenye_url + i + '\'>' + i + '</a></li>';
+                                }
+                            }
+                            pagehtml += '<li><a>...</a></li>';
+                            pagehtml += '<li><a href=\'' + fenye_url + pageNum + '\'>' + pageNum + '</a></li>';
+                        }
+                    }
+                    if (currentpage < pageNum) {
+                        pagehtml += '<li><a href=\'' + fenye_url + (currentpage + 1) + '\'>下一页</a></li>';
+                    }
+                }
+                obj.html(pagehtml);
+            }
+        }
+    </script>
+</html>
