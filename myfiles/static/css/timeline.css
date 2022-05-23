@@ -387,10 +387,12 @@ header h2,h3{
 .modal-body .modal-col .label {
     width: 120px;
     float: left;
+    margin: 0;
 }
 .modal-body .modal-col .input {
     width: 73%;
     float: left;
+    margin: 0;
 }
 
 .modal-body .modal-col textarea {
@@ -400,10 +402,16 @@ header h2,h3{
 .modal-body input {
     width: 100%;
     height: 30px;
+    font-size: large;
+    font-family: inherit;
+    border: 1px solid rgba(82, 168, 236, 0.8);
 }
 .modal-body select {
-    height: 30px;
+    height: 35px;
     width: 100%;
+    font-size: large;
+    font-family: inherit;
+    border: 1px solid rgba(82, 168, 236, 0.8);
 }
 .modal-footer a {
     text-decoration: none;
@@ -558,7 +566,7 @@ header h2,h3{
     opacity: 1;
 }
 
-.textarea{
+.textarea {
     font-size: large;
     font-family: inherit;
     width: 100%;
@@ -575,4 +583,7 @@ header h2,h3{
     overflow-y: auto;
     /*border-color: rgba(82, 168, 236, 0.8);*/
     /*box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);*/
+}
+.textarea div {
+    margin: 0;
 }
