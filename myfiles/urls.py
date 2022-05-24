@@ -40,6 +40,7 @@ urlpatterns = [
     path('md/edit', views.edit_md, name="md_edit"),
     # path('md/get', views.get_md_file_id, name='get_md')
 
-    path('timeline', views.timeline, name='timeline'),
-    path('timeline/get', views.get_timeline_by_id, name='get_timeline')
+    path('timeline/<int:key>', views.timeline, name='timeline'),
+    path('timeline/get', views.get_timeline_by_id, name='get_timeline'),
+    path('timeline/edit/<int:key>', views.edit_timeline, name='edit_timeline'),
 ]

@@ -9,7 +9,6 @@
 	</head>
 	<body>
         <div>
-            <button id="add-timeline">添加记录</button>
             <select id="order_by">
                 {% if order_by == '-' %}
                     <option value="">升序</option>
@@ -64,7 +63,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <span class="close">&times;</span>
-                    <h2 id="title-name">添加时间线</h2>
+                    <h2 id="title-name">编辑时间线</h2>
                 </div>
                 <div class="modal-body">
                     <div class="modal-col">
@@ -79,10 +78,10 @@
                          </div>
                         <div class="input" style="width: 156px;">
                             <select id="mood">
-                                <option value="" selected>选择此时的心情</option>
+                                <option value="">选择此时的心情</option>
                                 <option value="0">不高兴</option>
                                 <option value="1">正常</option>
-                                <option value="1">高兴</option>
+                                <option value="2">高兴</option>
                             </select>
                         </div>
                     </div>
@@ -110,25 +109,6 @@
                 </div>
             </div>
         </div>
-        <div class="myModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <span class="close">&times;</span>
-                    <h2 id="view-title"></h2>
-                    <p id="view-time"></p>
-                </div>
-                <div class="modal-body">
-                    <div class="modal-col">
-                        <div class="input" style="width: 93%; margin-left: 3%; margin-top: 0;">
-                            <div class="textarea" id="view-detail" style="margin-top: 0"></div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <a class="cancel"></a>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="fenye"><ul id="paging" class="pagination"></ul></div>
 	</body>
     <script type="text/javascript">
@@ -145,70 +125,90 @@
 
         let order_by = document.getElementById('order_by').value;
         let moods = document.getElementById('type').value;
-        let url = '{% url 'myfiles:timeline' key %}?order_by=' + order_by + '&mood=' + moods;
+        let url = '{% url 'myfiles:edit_timeline' key %}?order_by=' + order_by + '&mood=' + moods;
         PagingManage($('#paging'), {{ total_page }}, {{ page }}, url + '&page=');
 
         document.getElementById('order_by').onchange = function () {
             let order_by = document.getElementById('order_by').value;
             let moods = document.getElementById('type').value;
-            window.location.href = '{% url 'myfiles:timeline' key %}?order_by=' + order_by + '&mood=' + moods;
+            window.location.href = '{% url 'myfiles:edit_timeline' key %}?order_by=' + order_by + '&mood=' + moods;
         }
 
         document.getElementById('type').onchange = function () {
             let order_by = document.getElementById('order_by').value;
             let moods = document.getElementById('type').value;
-            window.location.href = '{% url 'myfiles:timeline' key %}?order_by=' + order_by + '&mood=' + moods;
+            window.location.href = '{% url 'myfiles:edit_timeline' key %}?order_by=' + order_by + '&mood=' + moods;
         }
 
-        $("#add-timeline").click(function () {
-            let modal = document.getElementsByClassName('myModal')[0];
-            let close_a = document.getElementsByClassName("close")[0];
-            let cancel_a = document.getElementsByClassName("cancel")[0];
-            let submit_a = document.getElementsByClassName("submit")[0];
-
-            modal.style.display = "block";
-
-            close_a.onclick = function() {
-                modal.style.display = "none";
-            }
-            cancel_a.onclick = function() {
-                modal.style.display = "none";
-            }
-            submit_a.onclick = function() {
-                let select_date = document.getElementById('select-date').value;
-                let mood = document.getElementById('mood').value;
-                let title = document.getElementById('title').value;
-                let detail = document.getElementById('detail').innerText;
-                if (!select_date) {alert('请选择一个时间 ~'); return;}
-                if (!mood) {alert('请选择一个心情 ~'); return;}
-                if (!title) {alert('请输入标题 ~'); return;}
-                if (!detail) {alert('请输入内容 ~'); return;}
-                let postdata = {
-                    select_date: select_date,
-                    mood: mood,
-                    title: title,
-                    detail: detail,
-                };
-                $.ajax({
-                    type: 'post',
-                    url: "{% url 'myfiles:timeline' key %}",
-                    data: postdata,
-                    datatype: 'json',
-                    success: function (data) {
-                        if(data['code'] === 1) {
-                            return;
-                        } else {
-                            window.location.href = "{% url 'myfiles:timeline' key %}";
+        function edit_detail (timeline_id) {
+            $.ajax({
+                type: 'get',
+                url: '{% url 'myfiles:get_timeline' %}?id=' + timeline_id,
+                success: function (data) {
+                    console.log(data);
+                    if(data['code'] === 1) {
+                        alert(data['msg']);
+                    } else {
+                        let modal = document.getElementsByClassName('myModal')[0];
+                        let close_a = document.getElementsByClassName("close")[0];
+                        let cancel_a = document.getElementsByClassName("cancel")[0];
+                        let submit_a = document.getElementsByClassName("submit")[0];
+                        modal.style.display = "block";
+                        close_a.onclick = function() {
+                            modal.style.display = "none";
                         }
-                    },
-                });
-            };
-            window.onclick = function(event) {
-                if (event.target === modal) {
-                    modal.style.display = "none";
+                        cancel_a.onclick = function() {
+                            modal.style.display = "none";
+                        }
+                        document.getElementById('select-date').value = data['data']['time_line'];
+                        document.getElementById('detail').innerText = data['data']['desc'];
+                        document.getElementById('title').value = data['data']['title'];
+                        let select_type = document.getElementById('mood');
+                        for (let i=0; i<select_type.options.length; i++) {
+                            if (select_type.options[i].value === data['data']['mood']+'') {
+                                select_type.options[i].selected = true;
+                                break;
+                            }
+                        }
+                        submit_a.onclick = function() {
+                            let select_date = document.getElementById('select-date').value;
+                            let mood = document.getElementById('mood').value;
+                            let title = document.getElementById('title').value;
+                            let detail = document.getElementById('detail').innerText;
+                            if (!select_date) {alert('请选择一个时间 ~'); return;}
+                            if (!mood) {alert('请选择一个心情 ~'); return;}
+                            if (!title) {alert('请输入标题 ~'); return;}
+                            if (!detail) {alert('请输入内容 ~'); return;}
+                            let postdata = {
+                                id: timeline_id,
+                                select_date: select_date,
+                                mood: mood,
+                                title: title,
+                                detail: detail,
+                            };
+                            $.ajax({
+                                type: 'post',
+                                url: "{% url 'myfiles:edit_timeline' key %}",
+                                data: postdata,
+                                datatype: 'json',
+                                success: function (data) {
+                                    if(data['code'] === 1) {
+                                        return;
+                                    } else {
+                                        window.location.href = "{% url 'myfiles:edit_timeline' key %}";
+                                    }
+                                },
+                            });
+                        };
+                        window.onclick = function(event) {
+                            if (event.target === modal) {
+                                modal.style.display = "none";
+                            }
+                        }
+                    }
                 }
-            }
-        });
+            })
+        }
 
         function count_time() {
             let current_time = Math.floor(new Date().getTime() / 1000);
@@ -228,35 +228,8 @@
         let timeline_desc = document.getElementsByClassName('desc');
         for(let i=0; i<timeline_desc.length; i++) {
             timeline_desc[i].onclick = function () {
-                get_detail(timeline_desc[i].id);
+                edit_detail(timeline_desc[i].id);
             }
-        }
-
-        function get_detail(timeline_id) {
-            $.ajax({
-                type: 'get',
-                url: '{% url 'myfiles:get_timeline' %}?id=' + timeline_id,
-                success: function (data) {
-                    if(data['code'] === 1) {
-                        alert(data['msg']);
-                    } else {
-                        let modal = document.getElementsByClassName('myModal')[1];
-                        let close_a = document.getElementsByClassName("close")[1];
-                        modal.style.display = "block";
-                        close_a.onclick = function() {
-                            modal.style.display = "none";
-                        }
-                        document.getElementById('view-detail').innerText = data['data']['desc'];
-                        document.getElementById('view-title').innerText = data['data']['title'];
-                        document.getElementById('view-time').innerText = '写于：' + data['data']['create_time'];
-                        window.onclick = function(event) {
-                            if (event.target === modal) {
-                                modal.style.display = "none";
-                            }
-                        }
-                    }
-                }
-            })
         }
 
         function PagingManage(obj, pageNum, currentpage, fenye_url) {

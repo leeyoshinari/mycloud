@@ -22,6 +22,7 @@ from common.calc import calc_md5, calc_file_md5
 from common.MinioStorage import MinIOStorage
 
 
+auth_key = 96
 logger = logging.getLogger('django')
 storage = MinIOStorage()
 formats = {'image': ['jpg', 'jpeg', 'bmp', 'png'], 'video': ['mp4', 'avi'], 'document': ['txt', 'md', 'doc', 'docx',
@@ -737,18 +738,23 @@ def get_timeline_by_id(request):
             timeline_id = request.GET.get('id')
             sweet = MyTimeLine.objects.get(id=timeline_id)
             logger.info(f'Get Time Line {timeline_id} success, ip: {host}, operator: {username}')
-            return result(msg='Get Success ~', data={'title': sweet.title, 'desc': sweet.content,
+            return result(msg='Get Success ~', data={'title': sweet.title, 'desc': sweet.content, 'mood': sweet.mood,
+                                                     'time_line': sweet.time_line.strftime('%Y-%m-%d'),
                                                      'create_time': sweet.create_time.strftime('%Y-%m-%d %H:%M:%S')})
         except:
             logger.error(traceback.format_exc())
             return result(code=1, msg='System Error ~')
 
-def timeline(request):
+def timeline(request, key):
+    host = request.headers.get('x-real-ip')
+    host = host if host else '127.0.0.1'
+    if key != auth_key:
+        logger.error(f'Auth key is incorrect, ip: {host}')
+        return render(request, '404.html')
+
     if request.method == 'POST':
         try:
             username = request.user.username
-            host = request.headers.get('x-real-ip')
-            host = host if host else '127.0.0.1'
             date_str = request.POST.get('select_date')
             mood = request.POST.get('mood')
             title = request.POST.get('title')
@@ -762,8 +768,6 @@ def timeline(request):
     else:
         try:
             page_size = 20
-            host = request.headers.get('x-real-ip')
-            host = host if host else '127.0.0.1'
             mood = request.GET.get('mood')
             order_by = request.GET.get('order_by')
             page = request.GET.get('page')
@@ -771,16 +775,67 @@ def timeline(request):
             order_by = order_by if order_by else ''
             if mood:
                 total_line = MyTimeLine.objects.filter(mood=mood).count()
-                res = MyTimeLine.objects.filter(mood=mood).order_by(f'{order_by}time_line')[page_size * (page - 1): page_size * page]
+                res = MyTimeLine.objects.values('id', 'time_line', 'mood', 'title').filter(mood=mood).order_by(f'{order_by}time_line')[page_size * (page - 1): page_size * page]
             else:
                 total_line = MyTimeLine.objects.all().count()
-                res = MyTimeLine.objects.all().order_by(f'{order_by}time_line')[page_size * (page - 1): page_size * page]
+                res = MyTimeLine.objects.values('id', 'time_line', 'mood', 'title').all().order_by(f'{order_by}time_line')[page_size * (page - 1): page_size * page]
             tips = ['相识', '在一起']    # 文案
             tip_times = [1652994173, 1652999173]    # 时间戳
             index = int(time.time()) % len(tips)
             logger.info(f'Get TimeLine success, ip: {host}')
             return render(request, 'timeline.html', context={'datas': res, 'page': page, 'mood': mood, 'order_by': order_by,
-                                                             'tips': tips[index], 'tip_times': tip_times[index],
+                                                             'tips': tips[index], 'tip_times': tip_times[index], 'key': auth_key,
+                                                             'total_page': (total_line + page_size - 1) // page_size})
+        except:
+            logger.error(traceback.format_exc())
+            return render(request, '404.html')
+
+def edit_timeline(request, key):
+    host = request.headers.get('x-real-ip')
+    host = host if host else '127.0.0.1'
+    if key != auth_key:
+        logger.error(f'Auth key is incorrect, ip: {host}')
+        return render(request, '404.html')
+
+    if request.method == 'POST':
+        try:
+            username = request.user.username
+            date_str = request.POST.get('select_date')
+            line_id = request.POST.get('id')
+            mood = request.POST.get('mood')
+            title = request.POST.get('title')
+            detail = request.POST.get('detail')
+            sweet = MyTimeLine.objects.get(id=line_id)
+            sweet.time_line = date_str
+            sweet.mood = mood
+            sweet.title = title
+            sweet.content = detail
+            sweet.save()
+            logger.info(f'Sweet Time Line edit success, id: {sweet.id}, ip: {host}, operator: {username}')
+            return result(msg='Edit success ~')
+        except:
+            logger.error(traceback.format_exc())
+            return result(code=1, msg='System Error ~')
+    else:
+        try:
+            page_size = 20
+            mood = request.GET.get('mood')
+            order_by = request.GET.get('order_by')
+            page = request.GET.get('page')
+            page = int(page) if page else 1
+            order_by = order_by if order_by else ''
+            if mood:
+                total_line = MyTimeLine.objects.filter(mood=mood).count()
+                res = MyTimeLine.objects.values('id', 'time_line', 'mood', 'title').filter(mood=mood).order_by(f'{order_by}time_line')[page_size * (page - 1): page_size * page]
+            else:
+                total_line = MyTimeLine.objects.all().count()
+                res = MyTimeLine.objects.values('id', 'time_line', 'mood', 'title').all().order_by(f'{order_by}time_line')[page_size * (page - 1): page_size * page]
+            tips = ['相识', '在一起']    # 文案
+            tip_times = [1652994173, 1652999173]    # 时间戳
+            index = int(time.time()) % len(tips)
+            logger.info(f'Get TimeLine success, ip: {host}')
+            return render(request, 'timeline_edit.html', context={'datas': res, 'page': page, 'mood': mood, 'order_by': order_by,
+                                                             'tips': tips[index], 'tip_times': tip_times[index], 'key': auth_key,
                                                              'total_page': (total_line + page_size - 1) // page_size})
         except:
             logger.error(traceback.format_exc())
