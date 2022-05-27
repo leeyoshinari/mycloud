@@ -85,7 +85,7 @@ header h2,h3{
   width: 16px;
   height: 10px;
   position: absolute;
-  background: blue;
+  background: rgb(213 213 213);
   left: 0;
   right: 0;
   margin-left:auto;
@@ -95,7 +95,7 @@ header h2,h3{
 }
 
 .timeline .hexa:before {
-  border-bottom: 4px solid blue;
+  border-bottom: 4px solid rgb(213 213 213);
   border-left-width: 8px;
   border-right-width: 8px;
   top: -4px;
@@ -104,7 +104,7 @@ header h2,h3{
 .timeline .hexa:after {
   border-left-width: 8px;
   border-right-width: 8px;
-  border-top: 4px solid blue;
+  border-top: 4px solid rgb(213 213 213);
   bottom: -4px;
 }
 .direction-r {

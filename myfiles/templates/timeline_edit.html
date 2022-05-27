@@ -54,7 +54,13 @@
                     </div>
                 </div>
                 <div class="direction-r">
-                    <div class="desc" id="{{ s.id }}">{{ s.title }}</div>
+                    {% if s.mood == 0 %}
+                        <div class="desc" id="{{ s.id }}" style="background-color: #d86e6e;">{{ s.title }}</div>
+                    {% elif s.mood == 2 %}
+                        <div class="desc" id="{{ s.id }}" style="background-color: darkseagreen;">{{ s.title }}</div>
+                    {% else %}
+                        <div class="desc" id="{{ s.id }}" style="background-color: cornflowerblue;">{{ s.title }}</div>
+                    {% endif %}
                 </div>
             </li>
             {% endfor %}
