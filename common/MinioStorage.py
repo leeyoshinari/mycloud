@@ -50,7 +50,7 @@ class MinIOStorage:
             logger.error(traceback.format_exc())
             return f'{bucket_name} 创建失败'
 
-    def upload_file_by_path(self, bucket_name: str, object_name: str, file_path: str, content_type=None):
+    def upload_file_by_path(self, bucket_name: str, object_name: str, file_path: str, content_type="application/octet-stream"):
         try:
             res = self.client.fput_object(bucket_name, object_name, file_path, content_type)
             return res
@@ -59,7 +59,7 @@ class MinIOStorage:
             logger.error(traceback.format_exc())
             return None
 
-    def upload_file_bytes(self, bucket_name: str, object_name: str, data: bytes, length: int, content_type=None):
+    def upload_file_bytes(self, bucket_name: str, object_name: str, data: bytes, length: int, content_type="application/octet-stream"):
         try:
             res = self.client.put_object(bucket_name, object_name, data, length, content_type)
             return res

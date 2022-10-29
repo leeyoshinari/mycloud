@@ -197,7 +197,7 @@ def upload_file_by_path(request):
             try:
                 file = Files.objects.get(md5=md5)
                 total_num[3] += 1
-                logger.info(f'{file} {Msg.MsgFastUploadSuccess}')
+                logger.info(f'{file.name} {Msg.MsgFastUploadSuccess}')
                 continue
             except Files.DoesNotExist:
                 pass
